@@ -24,16 +24,23 @@ import scala.reflect.macros.blackbox
 
 object JsonTaggedAdtCodecImpl {
 
+	/**
+	 * ADT / JSON type field based trait encoding and decoding implementation as a macro
+	 * @tparam T a trait type
+	 * @return a converter instance of T
+	 */
 	def encodeObjImpl[T : c.WeakTypeTag](c : blackbox.Context) : c.Expr[JsonTaggedAdtConverter[T]] = {
 		import c.universe._
 
 		case class JsonAdtConfig(jsonAdtType : String, symbol: Symbol)
 
+		def isJsonAdtAnnotation(annotation : Annotation) =  {
+			annotation.tree.tpe =:= typeOf[JsonAdt]
+		}
+
 		def readClassJsonAdt(symbol: Symbol) : JsonAdtConfig = {
 
-			val symAnnotations = symbol.asClass.annotations.filter { annotation =>
-				annotation.tree.tpe =:= typeOf[JsonAdt]
-			}
+			val symAnnotations = symbol.asClass.annotations.filter(isJsonAdtAnnotation)
 
 			if(symAnnotations.size > 1) {
 				c.abort(symbol.pos, s"Only one @JsonAdt is allowed for ${symbol.fullName}")
