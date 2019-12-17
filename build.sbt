@@ -23,9 +23,31 @@ ThisBuild / scalacOptions ++= Seq("-feature")
 
 ThisBuild / exportJars := true
 
-publishArtifact := false
+publishMavenStyle := true
 
-publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
+ThisBuild / publishTo := {
+	val nexus = "https://oss.sonatype.org/"
+	if (isSnapshot.value)
+		Some("snapshots" at nexus + "content/repositories/snapshots")
+	else
+		Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
+
+ThisBuild / pomExtra := (
+	<scm>
+		<url>https://github.com/abdolence/circe-tagged-adt-codec</url>
+		<connection>scm:git:https://github.com/abdolence/circe-tagged-adt-codec</connection>
+		<developerConnection>scm:git:https://github.com/abdolence/circe-tagged-adt-codec</developerConnection>
+	</scm>
+		<developers>
+			<developer>
+				<id>abdulla</id>
+				<name>Abdulla Abdurakhmanov</name>
+				<url>https://latestbit.com</url>
+			</developer>
+		</developers>
+	)
+
 
 ThisBuild / resolvers ++= Seq(
 	"Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
