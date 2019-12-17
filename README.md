@@ -28,8 +28,6 @@ The main objectives here are:
 - Avoid writing circe Encoder/Decoder manually
 - Check at the compile time JSON type field mappings and Scala case classes
 
-This library solves this issue:
-
 ### Getting Started
 Add the following to your `build.sbt`:
 
