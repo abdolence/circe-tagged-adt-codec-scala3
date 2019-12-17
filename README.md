@@ -30,6 +30,13 @@ The main objectives here are:
 
 This library solves this issue:
 
+### Getting Started
+Add the following to your `build.sbt`:
+
+```scala
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.1.0"
+```
+
 ### Usage
 
 ```scala
