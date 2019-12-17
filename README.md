@@ -26,7 +26,7 @@ The main objectives here are:
 - Avoid JSON type field in Scala case class definitions. It needs only for coding purposes here
 - Use any JSON type field values. They shouldn't be class names or anything
 - Avoid writing circe Encoder/Decoder manually
-- Check in the compile time JSON type field mappings and Scala case classes
+- Check at the compile time JSON type field mappings and Scala case classes
 
 This library solves this issue:
 
