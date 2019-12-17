@@ -43,9 +43,7 @@ sealed trait InvalidMultiTagTestEvent
 @JsonAdt("dup-tag")
 case class InvalidMultiTagTestEvent1(f1: String) extends InvalidMultiTagTestEvent
 
-
 class JsonTaggedAdtCodecImplTestSuite  extends AnyFlatSpec {
-
 
 	"A codec" should "be able to serialise case classes correctly" in {
 		implicit val encoder : Encoder[TestEvent] = JsonTaggedAdtCodec.createEncoder[TestEvent]("type")
@@ -64,7 +62,7 @@ class JsonTaggedAdtCodecImplTestSuite  extends AnyFlatSpec {
 		decode[TestEvent] (
 			testJson
 		) match {
-			case Right(model) => assert(model === TestEvent2("test-data"))
+			case Right(model : TestEvent) => assert(model === TestEvent2("test-data"))
 			case Left(ex) => assertThrows(ex)
 		}
 	}
