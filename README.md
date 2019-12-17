@@ -18,7 +18,7 @@ and you would like to encode them to JSON like this:
 {
   "type" : "my-event-1",
   "anyYourField" : "my-data", 
-  ...
+  "..." : "..."
 }
 ```
 
