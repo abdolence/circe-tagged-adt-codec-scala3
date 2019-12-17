@@ -24,7 +24,7 @@ and you would like to encode them to JSON like this:
 
 The main objectives here are:
 - Avoid JSON type field in Scala case class definitions. It needs only for coding purposes here
-- Use any JSON type field values. They shouldn't be class names or anything
+- Configurable JSON type field values. They don't have to be class names or anything.
 - Avoid writing circe Encoder/Decoder manually
 - Check at the compile time JSON type field mappings and Scala case classes
 
