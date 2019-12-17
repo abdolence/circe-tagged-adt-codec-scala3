@@ -16,9 +16,10 @@
 
 package org.latestbit.circe.adt.codec
 
-import io.circe.JsonObject
+import io.circe.{Decoder, JsonObject}
 
-trait JsonTaggedAdt[T] {
+trait JsonTaggedAdtConverter[T] {
 	def toJsonObject(obj : T) : (JsonObject,String)
+	def fromJsonObject(jsonTypeFieldValue : String, jsonObject: JsonObject) : Decoder.Result[T]
 }
 

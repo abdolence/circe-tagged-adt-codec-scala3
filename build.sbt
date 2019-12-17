@@ -3,9 +3,9 @@ import java.time.{ZoneOffset, ZonedDateTime}
 
 import sbt.Package.ManifestAttributes
 
-name := "slack-morphism-root"
+name := "circe-tagged-adt-codec-root"
 
-ThisBuild / version := "1.0.0-SNAPSHOT"
+ThisBuild / version := "0.1.0-SNAPSHOT"
 
 ThisBuild / organization := "org.latestbit"
 
@@ -17,7 +17,7 @@ ThisBuild / scalaVersion := "2.12.10"
 
 ThisBuild / crossScalaVersions := Seq("2.12.10")
 
-ThisBuild / sbtVersion := "1.3.8"
+ThisBuild / sbtVersion := "1.3.5"
 
 ThisBuild / scalacOptions ++= Seq("-feature")
 
@@ -29,8 +29,7 @@ publishTo := Some(Resolver.file("Unused transient repository", file("target/unus
 
 ThisBuild / resolvers ++= Seq(
 	"Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
-	"Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/",
-	"Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+	"Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 
 ThisBuild / scalacOptions ++= Seq(
@@ -51,7 +50,6 @@ ThisBuild / packageOptions := Seq(ManifestAttributes(
 
 val circeVersion = "0.12.3"
 val scalaTestVersion = "3.1.0"
-val sttpVer = "2.0.0-RC5"
 
 val baseDependencies =
 	Seq (
@@ -61,47 +59,33 @@ val baseDependencies =
 	).
 		map(_ % circeVersion) ++
 	Seq(
-		"io.circe" %% "circe-generic-extras" % "0.12.2"
-	) ++
-	Seq(
 		"org.scalactic" %% "scalactic",
 		"org.scalatest" %% "scalatest"
 	).
 		map(_ % scalaTestVersion % "test")
 
-addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
-
-lazy val slackMorphismRoot = project.in(file(".")).
-	aggregate(slackMorphismModels,slackMorphismClient, slackMorphismExamples).
+lazy val circeTaggedAdtCodecRoot =
+	(project in file(".")).
+	aggregate(circeTaggedAdtCodecMacros,circeTaggedAdtCodecLib).
 	settings(
 		publish := {},
 		publishLocal := {},
 		crossScalaVersions := List()
 	)
 
-lazy val slackMorphismModels =
-	(project in file("models")).
+lazy val circeTaggedAdtCodecMacros =
+	(project in file("macros")).
 		settings(
-			name := "slack-morphism-models",
+			name := "circe-tagged-adt-codec-macros",
 			libraryDependencies ++= baseDependencies ++ Seq(
+				"org.scala-lang" % "scala-reflect" % scalaVersion.value
 			)
 		)
-
-lazy val slackMorphismClient =
-	(project in file("client")).
+lazy val circeTaggedAdtCodecLib =
+	(project in file("lib")).
 		settings(
-			name := "slack-morphism-client",
-			libraryDependencies ++= baseDependencies ++ Seq(
-				"com.softwaremill.sttp.client" %% "core" % sttpVer
-			)
-		).
-		dependsOn(slackMorphismModels)
-
-lazy val slackMorphismExamples =
-	(project in file("examples")).
-		settings(
-			name := "slack-morphism-client",
+			name := "circe-tagged-adt-codec",
 			libraryDependencies ++= baseDependencies ++ Seq(
 			)
 		).
-		dependsOn(slackMorphismClient)
+		dependsOn(circeTaggedAdtCodecMacros)
