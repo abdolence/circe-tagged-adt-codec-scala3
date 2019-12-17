@@ -15,7 +15,7 @@ ThisBuild / licenses := Seq(("Apache License v2.0", url("http://www.apache.org/l
 
 ThisBuild / scalaVersion := "2.12.10"
 
-ThisBuild / crossScalaVersions := Seq("2.11.12","2.12.10", "2.13.1")
+ThisBuild / crossScalaVersions := Seq("2.12.10", "2.13.1")
 
 ThisBuild / sbtVersion := "1.3.5"
 
@@ -37,7 +37,6 @@ ThisBuild / scalacOptions ++= Seq(
 	"-unchecked",
 	"-feature",
 	"-Xsource:2.12",
-	"-Ypartial-unification",
 	"-language:higherKinds"
 )
 
