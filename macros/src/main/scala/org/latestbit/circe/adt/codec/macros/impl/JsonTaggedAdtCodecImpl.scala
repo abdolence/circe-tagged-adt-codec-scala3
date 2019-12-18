@@ -61,7 +61,7 @@ object JsonTaggedAdtCodecImpl {
 			c.Expr[JsonTaggedAdtConverter[T]] (
 			q"""
 					   new JsonTaggedAdtConverter[${traitSymbol}] {
-	                        import io.circe.{ JsonObject, Decoder, HCursor }
+	                        import io.circe.{ JsonObject, Decoder, ACursor }
 
 							override def toJsonObject(obj: ${traitSymbol}): (JsonObject, String) = {
 
@@ -72,13 +72,17 @@ object JsonTaggedAdtCodecImpl {
 	                            }
 	                        }
 
-					        override def fromJsonObject(jsonTypeFieldValue : String, cursor: HCursor) : Decoder.Result[${traitSymbol}] = {
+					        override def fromJsonObject(jsonTypeFieldValue : String, cursor: ACursor) : Decoder.Result[${traitSymbol}] = {
 
 					            jsonTypeFieldValue match {
 			                        case ..${caseClassesConfig.map { jsonAdtConfig =>
 										cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
 									}.toList :+
-										cq"""_ => Decoder.failedWithMessage[${traitSymbol}](s"Unknown json type received: '$$jsonTypeFieldValue'.") (cursor) """
+										cq"""_ =>
+			                                Left(
+												DecodingFailure(s"Unknown json type received: '$$jsonTypeFieldValue'.", cursor.history)
+			                                )
+											"""
 									}
 			                    }
 		                    }

@@ -24,7 +24,7 @@ and you would like to encode them to JSON like this:
 
 The main objectives here are:
 - Avoid JSON type field in Scala case class definitions. It needs only for coding purposes here
-- Configurable JSON type field values. They don't have to be class names or anything.
+- Configurable JSON type field values and their mapping to case classes. They don't have to be Scala class names.
 - Avoid writing circe Encoder/Decoder manually
 - Check at the compile time JSON type field mappings and Scala case classes
 
@@ -32,7 +32,7 @@ The main objectives here are:
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.1.0"
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.2.0"
 ```
 
 ### Usage
@@ -41,7 +41,12 @@ libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.1.0"
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
-import io.circe.generic.auto._ // This example uses auto coding for case classes. You decide here if you need auto/semi/custom coders for your case classes.
+
+// This example uses auto coding for case classes. 
+// You decide here if you need auto/semi/custom coders for your case classes.
+import io.circe.generic.auto._ 
+
+// One import for this ADT/JSON codec
 import org.latestbit.circe.adt.codec._
 
 
@@ -66,6 +71,55 @@ decode[TestEvent] (testJsonString) match {
    case Right(model : TestEvent) => // ...
 }
 ``` 
+### Configure and customise base ADT Encoder/Decoder implementation
+In case you need to slightly different style of coding of your ADT to JSON, there is an API to change it.
+
+Let's assume that you'd like to produce a bit different JSON something like this:
+
+```json
+{
+  "type" : "my-event-1",
+  "body" : {
+    "anyYourField" : "my-data", 
+     "..." : "..."
+  }  
+}
+```
+
+Then you should specify it with your own implementation like this:
+
+```scala
+implicit val encoder: Encoder[TestEvent] =
+    JsonTaggedAdtCodec.
+        createEncoderDefinition[TestEvent] { case (converter, obj) =>
+
+            // converting our case classes accordingly to obj instance type
+            // and receiving JSON type field value from annotation
+            val (jsonObj, typeFieldValue) = converter.toJsonObject(obj)
+
+            // Our custom JSON structure
+            JsonObject(
+                ("type" -> Json.fromString(typeFieldValue)),
+                ("body" -> Json.fromJsonObject(jsonObj))
+            )
+        }
+
+implicit val decoder: Decoder[TestEvent] =
+    JsonTaggedAdtCodec.
+        createDecoderDefinition[TestEvent] { case (converter, cursor) =>
+
+            cursor.get[Option[String]]("type").flatMap {
+                case Some(typeFieldValue) =>
+                    // Decode a case class from body accordingly to typeFieldValue
+                    converter.fromJsonObject(
+                        jsonTypeFieldValue = typeFieldValue,
+                        cursor = cursor.downField("body")
+                    )
+                case _ =>
+                    Decoder.failedWithMessage(s"'type' isn't specified in json.")(cursor)
+            }
+        }
+```
 
 ### Licence
 Apache Software License (ASL)

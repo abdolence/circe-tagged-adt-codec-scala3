@@ -16,7 +16,7 @@
 
 package org.latestbit.circe.adt.codec
 
-import io.circe.{Decoder, HCursor, JsonObject}
+import io.circe.{ACursor, Decoder, JsonObject}
 
 /**
  * Auxiliary JSON to ADT case classes converter
@@ -37,6 +37,6 @@ trait JsonTaggedAdtConverter[T] {
 	 * @param cursor JSON decoding cursor
 	 * @return decoding result of the instance of a case class, accordingly to a jsonTypeFieldValue and a trait type
 	 */
-	def fromJsonObject(jsonTypeFieldValue : String, cursor : HCursor) : Decoder.Result[T]
+	def fromJsonObject(jsonTypeFieldValue : String, cursor : ACursor) : Decoder.Result[T]
 }
 

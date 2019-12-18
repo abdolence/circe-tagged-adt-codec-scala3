@@ -27,56 +27,61 @@ sealed trait TestEvent
 
 @JsonAdt("ev1")
 case class TestEvent1(f1: String) extends TestEvent
+
 @JsonAdt("ev2")
 case class TestEvent2(f1: String) extends TestEvent
+
 case class TestEvent3(f1: String) extends TestEvent
 
 sealed trait DupTagTestEvent
+
 @JsonAdt("dup-tag")
 case class InvalidTestEvent1(f1: String) extends DupTagTestEvent
+
 @JsonAdt("dup-tag")
 case class InvalidTestEvent2(f1: String) extends DupTagTestEvent
 
 sealed trait EmptyTestEvent
 
 sealed trait InvalidMultiTagTestEvent
+
 @JsonAdt("dup-tag")
 @JsonAdt("dup-tag")
 case class InvalidMultiTagTestEvent1(f1: String) extends InvalidMultiTagTestEvent
 
-class JsonTaggedAdtCodecImplTestSuite  extends AnyFlatSpec {
+class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
 	"A codec" should "be able to serialise case classes correctly" in {
-		implicit val encoder : Encoder[TestEvent] = JsonTaggedAdtCodec.createEncoder[TestEvent]("type")
+		implicit val encoder: Encoder[TestEvent] = JsonTaggedAdtCodec.createEncoder[TestEvent]("type")
 
-		val testEvent : TestEvent = TestEvent1("test")
-		val json : String = testEvent.asJson.dropNullValues.noSpaces
+		val testEvent: TestEvent = TestEvent1("test")
+		val json: String = testEvent.asJson.dropNullValues.noSpaces
 
-		assert( json.contains( """"type":"ev1"""" )  )
+		assert(json.contains(""""type":"ev1""""))
 	}
 
 	it should "be able to deserialise case classes" in {
-		implicit val decoder : Decoder[TestEvent] = JsonTaggedAdtCodec.createDecoder[TestEvent]("type")
+		implicit val decoder: Decoder[TestEvent] = JsonTaggedAdtCodec.createDecoder[TestEvent]("type")
 
 		val testJson = """{"type" : "ev2", "f1" : "test-data"}"""
 
-		decode[TestEvent] (
+		decode[TestEvent](
 			testJson
 		) match {
-			case Right(model : TestEvent) => assert(model === TestEvent2("test-data"))
+			case Right(model: TestEvent) => assert(model === TestEvent2("test-data"))
 			case Left(ex) => assertThrows(ex)
 		}
 	}
 
 
 	it should "check for unknown or absent type field in json in decoder" in {
-		implicit val decoder : Decoder[TestEvent] = JsonTaggedAdtCodec.createDecoder[TestEvent]("type")
+		implicit val decoder: Decoder[TestEvent] = JsonTaggedAdtCodec.createDecoder[TestEvent]("type")
 
 		val testJson1 = """{"type" : "ev3", "f1" : "test-data"}"""
 		val testJson2 = """{"type2" : "ev2", "f1" : "test-data"}"""
 
-		Seq(testJson1,testJson2).map { testJson =>
-			decode[TestEvent] (
+		Seq(testJson1, testJson2).map { testJson =>
+			decode[TestEvent](
 				testJson
 			) match {
 				case Right(model) => fail(model.toString)
@@ -108,5 +113,57 @@ class JsonTaggedAdtCodecImplTestSuite  extends AnyFlatSpec {
 			  | implicit val encoder : Encoder[InvalidMultiTagTestEvent] = JsonTaggedAdtCodec.createEncoder[InvalidMultiTagTestEvent]("type")
 			  |""".stripMargin
 		)
+	}
+
+	it should "be able to configured with custom implementation of encoder" in {
+
+		implicit val encoder: Encoder[TestEvent] =
+			JsonTaggedAdtCodec.
+				createEncoderDefinition[TestEvent] { case (converter, obj) =>
+
+					// converting our case classes accordingly to obj instance type
+					// and receiving JSON type field value from annotation
+					val (jsonObj, typeFieldValue) = converter.toJsonObject(obj)
+
+					// Our custom JSON structure
+					JsonObject(
+						("type" -> Json.fromString(typeFieldValue)),
+						("body" -> Json.fromJsonObject(jsonObj))
+					)
+				}
+
+		val testEvent: TestEvent = TestEvent1("test")
+		val json: String = testEvent.asJson.dropNullValues.noSpaces
+
+		assert(json.contains(""""type":"ev1""""))
+		assert(json.contains(""""body":{"""))
+	}
+
+	it should "be able to configured with custom implementation of decoder" in {
+
+		implicit val decoder: Decoder[TestEvent] =
+			JsonTaggedAdtCodec.
+				createDecoderDefinition[TestEvent] { case (converter, cursor) =>
+
+					cursor.get[Option[String]]("type").flatMap {
+						case Some(typeFieldValue) =>
+							// Decode a case class from body accordingly to typeFieldValue
+							converter.fromJsonObject(
+								jsonTypeFieldValue = typeFieldValue,
+								cursor = cursor.downField("body")
+							)
+						case _ =>
+							Decoder.failedWithMessage(s"'type' isn't specified in json.")(cursor)
+					}
+				}
+
+		val testJson = """{"type" : "ev2", "body" : { "f1" : "test-data" } }"""
+
+		decode[TestEvent](
+			testJson
+		) match {
+			case Right(model: TestEvent) => assert(model === TestEvent2("test-data"))
+			case Left(ex) => assertThrows(ex)
+		}
 	}
 }
