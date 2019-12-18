@@ -127,8 +127,8 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
 					// Our custom JSON structure
 					JsonObject(
-						("type" -> Json.fromString(typeFieldValue)),
-						("body" -> Json.fromJsonObject(jsonObj))
+						"type" -> Json.fromString(typeFieldValue),
+						"body" -> Json.fromJsonObject(jsonObj)
 					)
 				}
 

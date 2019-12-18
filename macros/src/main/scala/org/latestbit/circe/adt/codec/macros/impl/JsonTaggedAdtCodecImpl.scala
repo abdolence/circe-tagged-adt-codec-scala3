@@ -16,7 +16,6 @@
 
 package org.latestbit.circe.adt.codec.macros.impl
 
-import io.circe.JsonObject
 import org.latestbit.circe.adt.codec.{JsonAdt, JsonTaggedAdtConverter}
 
 import scala.language.experimental.macros

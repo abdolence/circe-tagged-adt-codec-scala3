@@ -99,8 +99,8 @@ implicit val encoder: Encoder[TestEvent] =
 
             // Our custom JSON structure
             JsonObject(
-                ("type" -> Json.fromString(typeFieldValue)),
-                ("body" -> Json.fromJsonObject(jsonObj))
+                "type" -> Json.fromString(typeFieldValue),
+                "body" -> Json.fromJsonObject(jsonObj)
             )
         }
 
