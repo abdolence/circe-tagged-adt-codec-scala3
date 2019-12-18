@@ -5,7 +5,7 @@ import sbt.Package.ManifestAttributes
 
 name := "circe-tagged-adt-codec-root"
 
-ThisBuild / version := "0.2.0"
+ThisBuild / version := "0.2.1"
 
 ThisBuild / organization := "org.latestbit"
 

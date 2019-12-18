@@ -60,7 +60,7 @@ object JsonTaggedAdtCodecImpl {
 			c.Expr[JsonTaggedAdtConverter[T]] (
 			q"""
 					   new JsonTaggedAdtConverter[${traitSymbol}] {
-	                        import io.circe.{ JsonObject, Decoder, ACursor }
+	                        import io.circe.{ JsonObject, Decoder, ACursor, DecodingFailure }
 
 							override def toJsonObject(obj: ${traitSymbol}): (JsonObject, String) = {
 
