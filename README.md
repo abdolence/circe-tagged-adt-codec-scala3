@@ -3,8 +3,8 @@
 ![](https://github.com/abdolence/circe-tagged-adt-codec/workflows/Scala%20CI/badge.svg)
 
 
-This is a tiny (yet macro based) library to avoid boilerplate 
-with ADT encoding to JSON when you want to configure JSON type field values for case classes:
+This is a tiny (yet macro based) library to provide an efficient, type safe 
+ADT to JSON encoder/decoder for circe with configurable JSON type field.
 
 When you have case classes defined like this
 ```scala
