@@ -57,6 +57,37 @@ object JsonTaggedAdtCodecImpl {
 			}
 		}
 
+		def createConverterExpr(traitSymbol : Symbol, caseClassesConfig : Iterable[JsonAdtConfig]) = {
+			c.Expr[JsonTaggedAdtConverter[T]] (
+			q"""
+					   new JsonTaggedAdtConverter[${traitSymbol}] {
+	                        import io.circe.{ JsonObject, Decoder, HCursor }
+
+							override def toJsonObject(obj: ${traitSymbol}): (JsonObject, String) = {
+								import io.circe.generic.auto._
+
+								obj match {
+	                                case ..${caseClassesConfig.map { jsonAdtConfig =>
+										cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
+									}}
+	                            }
+	                        }
+
+					        override def fromJsonObject(jsonTypeFieldValue : String, cursor: HCursor) : Decoder.Result[${traitSymbol}] = {
+		                        import io.circe.generic.auto._
+					            jsonTypeFieldValue match {
+			                        case ..${caseClassesConfig.map { jsonAdtConfig =>
+										cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
+									}.toList :+
+										cq"""_ => Decoder.failedWithMessage[${traitSymbol}](s"Unknown json type received: '$$jsonTypeFieldValue'.") (cursor) """
+									}
+			                    }
+		                    }
+						}
+					 """
+			)
+		}
+
 		val baseSymbol = c.symbolOf[T]
 
 		if(baseSymbol.isClass) {
@@ -71,36 +102,8 @@ object JsonTaggedAdtCodecImpl {
 				find(_._2.length > 1) match {
 				case Some(duplicate) =>
 					c.abort(duplicate._2.head.symbol.pos, s"${duplicate._2.map(_.symbol.fullName).mkString(", ")} defined duplicate json type")
-				case _ => {
-					c.Expr[JsonTaggedAdtConverter[T]] (
-						q"""
-						   new JsonTaggedAdtConverter[${baseSymbol}] {
-		                        import io.circe.{ JsonObject, Decoder, HCursor }
-
-								override def toJsonObject(obj: ${baseSymbol}): (JsonObject, String) = {
-									import io.circe.generic.auto._
-
-									obj match {
-		                                case ..${subclassesMap.flatMap(_._2.headOption).map { jsonAdtConfig =>
-											cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
-										}}
-		                            }
-		                        }
-
-						        override def fromJsonObject(jsonTypeFieldValue : String, cursor: HCursor) : Decoder.Result[${baseSymbol}] = {
-			                        import io.circe.generic.auto._
-						            jsonTypeFieldValue match {
-				                        case ..${subclassesMap.flatMap(_._2.headOption).map { jsonAdtConfig =>
-											cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
-										}.toList :+
-											cq"""_ => Decoder.failedWithMessage[${baseSymbol}](s"Unknown json type received: '$$jsonTypeFieldValue'.") (cursor) """
-										}
-				                    }
-			                    }
-							}
-						 """
-					)
-				}
+				case _ =>
+					createConverterExpr(baseSymbol, subclassesMap.flatMap(_._2.headOption))
 			}
 
 		}
