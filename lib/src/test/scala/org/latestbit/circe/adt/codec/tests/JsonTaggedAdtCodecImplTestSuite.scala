@@ -19,6 +19,7 @@ package org.latestbit.circe.adt.codec.tests
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
+import io.circe.generic.auto._
 import org.latestbit.circe.adt.codec._
 import org.scalatest.flatspec.AnyFlatSpec
 

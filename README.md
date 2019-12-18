@@ -41,6 +41,7 @@ libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.1.0"
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
+import io.circe.generic.auto._ // This example uses auto coding for case classes. You decide here if you need auto/semi/custom coders for your case classes.
 import org.latestbit.circe.adt.codec._
 
 

@@ -64,7 +64,6 @@ object JsonTaggedAdtCodecImpl {
 	                        import io.circe.{ JsonObject, Decoder, HCursor }
 
 							override def toJsonObject(obj: ${traitSymbol}): (JsonObject, String) = {
-								import io.circe.generic.auto._
 
 								obj match {
 	                                case ..${caseClassesConfig.map { jsonAdtConfig =>
@@ -74,7 +73,7 @@ object JsonTaggedAdtCodecImpl {
 	                        }
 
 					        override def fromJsonObject(jsonTypeFieldValue : String, cursor: HCursor) : Decoder.Result[${traitSymbol}] = {
-		                        import io.circe.generic.auto._
+
 					            jsonTypeFieldValue match {
 			                        case ..${caseClassesConfig.map { jsonAdtConfig =>
 										cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
