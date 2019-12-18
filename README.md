@@ -1,4 +1,7 @@
 ## Circe auto encoder/decoder implementation for ADT to JSON with a type field for Scala 2.12+
+[![Maven](https://img.shields.io/nexus/s/https/oss.sonatype.org/org.latestbit/circe-tagged-adt-codec_2.13.svg)](https://img.shields.io/nexus/s/https/oss.sonatype.org/org.latestbit/circe-tagged-adt-codec_2.13.svg)
+![](https://github.com/abdolence/circe-tagged-adt-codec/workflows/Scala%20CI/badge.svg)
+
 
 This is a tiny (yet macro based) library to avoid boilerplate 
 with ADT encoding to JSON when you want to configure JSON type field values for case classes:
