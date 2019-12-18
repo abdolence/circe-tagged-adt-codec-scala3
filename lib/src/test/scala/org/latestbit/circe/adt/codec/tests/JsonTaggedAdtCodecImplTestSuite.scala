@@ -76,7 +76,7 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 			testJson
 		) match {
 			case Right(model: TestEvent) => assert(model === TestEvent2("test-data"))
-			case Left(ex) => assertThrows(ex)
+			case Left(ex) => fail(ex)
 		}
 	}
 
@@ -185,7 +185,7 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 			testJson
 		) match {
 			case Right(model: TestEvent) => assert(model === TestEvent2("test-data"))
-			case Left(ex) => assertThrows(ex)
+			case Left(ex) => fail(ex)
 		}
 	}
 }
