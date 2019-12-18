@@ -32,7 +32,7 @@ The main objectives here are:
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.2.0"
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.2.1"
 ```
 
 ### Usage
