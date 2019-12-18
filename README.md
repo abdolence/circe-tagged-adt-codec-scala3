@@ -107,7 +107,8 @@ implicit val encoder: Encoder[TestEvent] =
 implicit val decoder: Decoder[TestEvent] =
     JsonTaggedAdtCodec.
         createDecoderDefinition[TestEvent] { case (converter, cursor) =>
-
+            
+            // Reading JSON type field value
             cursor.get[Option[String]]("type").flatMap {
                 case Some(typeFieldValue) =>
                     // Decode a case class from body accordingly to typeFieldValue
