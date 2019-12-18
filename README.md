@@ -55,6 +55,9 @@ import org.latestbit.circe.adt.codec._
 
 sealed trait TestEvent
 
+//@JsonAdt annotation is required if you'd like to specify JSON type field value yourself. 
+// Otherwise it would be the class name  
+
 @JsonAdt("my-event-1") 
 case class MyEvent1(anyYourField : String /*, ...*/) extends TestEvent
 @JsonAdt("my-event-2")

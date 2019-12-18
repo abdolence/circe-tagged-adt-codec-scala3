@@ -23,33 +23,40 @@ import io.circe.generic.auto._
 import org.latestbit.circe.adt.codec._
 import org.scalatest.flatspec.AnyFlatSpec
 
-sealed trait TestEvent
+object TestModels {
+	sealed trait TestEvent
 
-@JsonAdt("ev1")
-case class TestEvent1(f1: String) extends TestEvent
+	@JsonAdt("ev1")
+	case class TestEvent1(f1: String) extends TestEvent
 
-@JsonAdt("ev2")
-case class TestEvent2(f1: String) extends TestEvent
+	@JsonAdt("ev2")
+	case class TestEvent2(f1: String) extends TestEvent
 
-case class TestEvent3(f1: String) extends TestEvent
+	case class TestEvent3(f1: String) extends TestEvent
 
-sealed trait DupTagTestEvent
+	sealed trait DupTagTestEvent
 
-@JsonAdt("dup-tag")
-case class InvalidTestEvent1(f1: String) extends DupTagTestEvent
+	@JsonAdt("dup-tag")
+	case class InvalidTestEvent1(f1: String) extends DupTagTestEvent
 
-@JsonAdt("dup-tag")
-case class InvalidTestEvent2(f1: String) extends DupTagTestEvent
+	@JsonAdt("dup-tag")
+	case class InvalidTestEvent2(f1: String) extends DupTagTestEvent
 
-sealed trait EmptyTestEvent
+	sealed trait EmptyTestEvent
 
-sealed trait InvalidMultiTagTestEvent
+	sealed trait InvalidMultiTagTestEvent
 
-@JsonAdt("dup-tag")
-@JsonAdt("dup-tag")
-case class InvalidMultiTagTestEvent1(f1: String) extends InvalidMultiTagTestEvent
+	@JsonAdt("dup-tag")
+	@JsonAdt("dup-tag")
+	case class InvalidMultiTagTestEvent1(f1: String) extends InvalidMultiTagTestEvent
+
+	sealed trait NotAnnotatedTestEvent
+	case class NotAnnotatedTestEvent1(f1: String) extends NotAnnotatedTestEvent
+	case class NotAnnotatedTestEvent2(f1: String) extends NotAnnotatedTestEvent
+}
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
+	import TestModels._
 
 	"A codec" should "be able to serialise case classes correctly" in {
 		implicit val encoder: Encoder[TestEvent] = JsonTaggedAdtCodec.createEncoder[TestEvent]("type")
@@ -73,7 +80,6 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 		}
 	}
 
-
 	it should "check for unknown or absent type field in json in decoder" in {
 		implicit val decoder: Decoder[TestEvent] = JsonTaggedAdtCodec.createDecoder[TestEvent]("type")
 
@@ -87,6 +93,22 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 				case Right(model) => fail(model.toString)
 				case Left(ex) => assert(ex.getMessage.nonEmpty)
 			}
+		}
+
+	}
+
+	it should "able to serialise and deserialise unannotated case classes" in {
+		implicit val encoder: Encoder[NotAnnotatedTestEvent] = JsonTaggedAdtCodec.createEncoder[NotAnnotatedTestEvent]("type")
+		implicit val decoder: Decoder[NotAnnotatedTestEvent] = JsonTaggedAdtCodec.createDecoder[NotAnnotatedTestEvent]("type")
+
+		val testEvent: NotAnnotatedTestEvent = NotAnnotatedTestEvent1("test")
+		val testJson: String = testEvent.asJson.dropNullValues.noSpaces
+
+		decode[NotAnnotatedTestEvent](
+			testJson
+		) match {
+			case Right(model) => assert(model === testEvent)
+			case Left(ex) => fail(ex)
 		}
 
 	}
