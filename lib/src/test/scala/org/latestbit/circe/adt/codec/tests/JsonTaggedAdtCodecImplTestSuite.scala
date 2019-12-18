@@ -91,7 +91,7 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
 	}
 
-	it should "be able to detect duplicate tags in compile time" in {
+	it should "be able to detect duplicate tags at compile time" in {
 		assertDoesNotCompile(
 			"""
 			  | implicit val encoder : Encoder[DupTagTestEvent] = JsonTaggedAdtCodec.createEncoder[DupTagTestEvent]("type")
@@ -99,7 +99,7 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 		)
 	}
 
-	it should "be able to detect empty sealed traits compile time" in {
+	it should "be able to detect empty sealed traits at compile time" in {
 		assertDoesNotCompile(
 			"""
 			  | implicit val encoder : Encoder[EmptyTestEvent] = JsonTaggedAdtCodec.createEncoder[EmptyTestEvent]("type")
@@ -107,7 +107,7 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 		)
 	}
 
-	it should "be able to detect multiple annotations in compile time" in {
+	it should "be able to detect multiple annotations at compile time" in {
 		assertDoesNotCompile(
 			"""
 			  | implicit val encoder : Encoder[InvalidMultiTagTestEvent] = JsonTaggedAdtCodec.createEncoder[InvalidMultiTagTestEvent]("type")
