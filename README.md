@@ -78,9 +78,9 @@ decode[TestEvent] (testJsonString) match {
 }
 ``` 
 ### Configure and customise base ADT Encoder/Decoder implementation
-In case you need to slightly different style of coding of your ADT to JSON, there is an API to change it.
+In case you need a slightly different style of coding of your ADT to JSON, there is an API to change it.
 
-Let's assume that you'd like to produce a bit different JSON something like this:
+Let's assume that you'd like to produce a bit different JSON like this:
 
 ```json
 {
@@ -92,7 +92,7 @@ Let's assume that you'd like to produce a bit different JSON something like this
 }
 ```
 
-Then you should specify it with your own implementation like this:
+Then you should specify it with your own implementation:
 
 ```scala
 implicit val encoder: Encoder[TestEvent] =
