@@ -1,5 +1,5 @@
 ## Circe auto encoder/decoder implementation for ADT to JSON with a type field for Scala 2.12+
-[![Maven](https://img.shields.io/nexus/s/https/oss.sonatype.org/org.latestbit/circe-tagged-adt-codec_2.13.svg)](https://img.shields.io/nexus/s/https/oss.sonatype.org/org.latestbit/circe-tagged-adt-codec_2.13.svg)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.latestbit/circe-tagged-adt-codec_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.latestbit/circe-tagged-adt-codec_2.13/)
 ![](https://github.com/abdolence/circe-tagged-adt-codec/workflows/Scala%20CI/badge.svg)
 
 
