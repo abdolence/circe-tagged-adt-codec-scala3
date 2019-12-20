@@ -19,15 +19,16 @@ package org.latestbit.circe.adt
 import org.latestbit.circe.adt.codec.macros.impl.JsonTaggedAdtCodecImpl
 
 /**
- * The main package to import to access to ADT / JSON coders/encoders and implicit macro converters
- */
+  * The main package to import to access to ADT / JSON coders/encoders and implicit macro converters
+  */
 package object codec {
-	import scala.language.experimental.macros
+  import scala.language.experimental.macros
 
-	/**
-	 * An implicit macro converter to generate code to convert case classes to JSON objects and back
-	 * @tparam T A trait type
-	 * @return JSON converter for ADT case classes
-	 */
-	implicit def createAdtConverter[T]: JsonTaggedAdtConverter[T] = macro JsonTaggedAdtCodecImpl.encodeObjImpl[T]
+  /**
+	* An implicit macro converter to generate code to convert case classes to JSON objects and back
+	* @tparam T A trait type
+	* @return JSON converter for ADT case classes
+	*/
+  implicit def createAdtConverter[T]: JsonTaggedAdtConverter[T] =
+    macro JsonTaggedAdtCodecImpl.encodeObjImpl[T]
 }

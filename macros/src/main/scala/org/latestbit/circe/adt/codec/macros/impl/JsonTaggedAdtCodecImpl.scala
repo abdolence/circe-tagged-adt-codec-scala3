@@ -16,110 +16,112 @@
 
 package org.latestbit.circe.adt.codec.macros.impl
 
-import org.latestbit.circe.adt.codec.{JsonAdt, JsonTaggedAdtConverter}
+import org.latestbit.circe.adt.codec.{ JsonAdt, JsonTaggedAdtConverter }
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
 
 object JsonTaggedAdtCodecImpl {
 
-	/**
-	 * ADT / JSON type field based trait encoding and decoding implementation as a macro
-	 * @tparam T a trait type
-	 * @return a converter instance of T
-	 */
-	def encodeObjImpl[T : c.WeakTypeTag](c : blackbox.Context) : c.Expr[JsonTaggedAdtConverter[T]] = {
-		import c.universe._
+  /**
+	* ADT / JSON type field based trait encoding and decoding implementation as a macro
+	* @tparam T a trait type
+	* @return a converter instance of T
+	*/
+  def encodeObjImpl[T : c.WeakTypeTag]( c: blackbox.Context ): c.Expr[JsonTaggedAdtConverter[T]] = {
+    import c.universe._
 
-		case class JsonAdtConfig(jsonAdtType : String, symbol: Symbol) {
-			lazy val hasDataToEncode : Boolean =
-				!symbol.asClass.isModuleClass
-		}
+    case class JsonAdtConfig( jsonAdtType: String, symbol: Symbol ) {
+      lazy val hasDataToEncode: Boolean =
+        !symbol.asClass.isModuleClass
+    }
 
-		def isJsonAdtAnnotation(annotation : Annotation) =  {
-			annotation.tree.tpe =:= typeOf[JsonAdt]
-		}
+    def isJsonAdtAnnotation( annotation: Annotation ) = {
+      annotation.tree.tpe =:= typeOf[JsonAdt]
+    }
 
-		def readClassJsonAdt(symbol: Symbol) : JsonAdtConfig = {
+    def readClassJsonAdt( symbol: Symbol ): JsonAdtConfig = {
 
-			val symAnnotations = symbol.asClass.annotations.filter(isJsonAdtAnnotation)
+      val symAnnotations = symbol.asClass.annotations.filter( isJsonAdtAnnotation )
 
-			if(symAnnotations.size > 1) {
-				c.abort(symbol.pos, s"Only one @JsonAdt is allowed for ${symbol.fullName}")
-			}
-			else {
-				symAnnotations.headOption.flatMap { headAnnotation =>
-					headAnnotation.tree.children.tail.collectFirst {
-						case Literal(Constant(jsonAdtType: String)) => JsonAdtConfig(jsonAdtType, symbol)
-					}
-				}.
-					getOrElse(
-						JsonAdtConfig(symbol.name.decodedName.toString, symbol)
-					)
-			}
-		}
+      if (symAnnotations.size > 1) {
+        c.abort( symbol.pos, s"Only one @JsonAdt is allowed for ${symbol.fullName}" )
+      } else {
+        symAnnotations.headOption
+          .flatMap { headAnnotation =>
+            headAnnotation.tree.children.tail.collectFirst {
+              case Literal( Constant( jsonAdtType: String ) ) =>
+                JsonAdtConfig( jsonAdtType, symbol )
+            }
+          }
+          .getOrElse(
+            JsonAdtConfig( symbol.name.decodedName.toString, symbol )
+          )
+      }
+    }
 
-		def createConverterExpr(traitSymbol : Symbol, caseClassesConfig : Iterable[JsonAdtConfig]) = {
-			c.Expr[JsonTaggedAdtConverter[T]] (
-			q"""
-					   new JsonTaggedAdtConverter[${traitSymbol}] {
-	                        import io.circe.{ JsonObject, Decoder, ACursor, DecodingFailure }
+    def createConverterExpr( traitSymbol: Symbol, caseClassesConfig: Iterable[JsonAdtConfig] ) = {
+      // format: off
+		c.Expr[JsonTaggedAdtConverter[T]] (
+		q"""
+			   new JsonTaggedAdtConverter[${traitSymbol}] {
+                    import io.circe.{ JsonObject, Decoder, ACursor, DecodingFailure }
 
-							override def toJsonObject(obj: ${traitSymbol}): (JsonObject, String) = {
+					override def toJsonObject(obj: ${traitSymbol}): (JsonObject, String) = {
 
-								obj match {
-	                                case ..${caseClassesConfig.map { jsonAdtConfig =>
-										if(jsonAdtConfig.hasDataToEncode) {
-											cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
-										}
-										else {
-											cq"ev : ${jsonAdtConfig.symbol} => (JsonObject(),${jsonAdtConfig.jsonAdtType}) "
-										}
-									}}
-	                            }
-	                        }
+						obj match {
+                            case ..${caseClassesConfig.map { jsonAdtConfig =>
+								if(jsonAdtConfig.hasDataToEncode) {
+									cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
+								}
+								else {
+									cq"ev : ${jsonAdtConfig.symbol} => (JsonObject(),${jsonAdtConfig.jsonAdtType}) "
+								}
+							}}
+                        }
+                    }
 
-					        override def fromJsonObject(jsonTypeFieldValue : String, cursor: ACursor) : Decoder.Result[${traitSymbol}] = {
+			        override def fromJsonObject(jsonTypeFieldValue : String, cursor: ACursor) : Decoder.Result[${traitSymbol}] = {
 
-					            jsonTypeFieldValue match {
-			                        case ..${caseClassesConfig.map { jsonAdtConfig =>
-										cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
-									}.toList :+
-										cq"""_ =>
-			                                Left(
-												DecodingFailure(s"Unknown json type received: '$$jsonTypeFieldValue'.", cursor.history)
-			                                )
-											"""
-									}
-			                    }
-		                    }
-						}
-					 """
-			)
-		}
+			            jsonTypeFieldValue match {
+	                        case ..${caseClassesConfig.
+								map { jsonAdtConfig =>
+									cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
+								}.toList :+
+									cq"""_ =>
+		                                Left(DecodingFailure(s"Unknown json type received: '$$jsonTypeFieldValue'.", cursor.history))
+									"""
+							}
+	                    }
+                    }
+				}
+			 """
+		) 
+		// format: on
+    }
 
-		val baseSymbol = c.symbolOf[T]
+    val baseSymbol = c.symbolOf[T]
 
-		if(baseSymbol.isClass) {
-			val baseSymbolClass = c.symbolOf[T].asClass
-			val subclasses: Set[c.universe.Symbol] = baseSymbolClass.knownDirectSubclasses
-			val subclassesMap = subclasses.toList.map(readClassJsonAdt).groupBy(_.jsonAdtType)
+    if (baseSymbol.isClass) {
+      val baseSymbolClass = c.symbolOf[T].asClass
+      val subclasses: Set[c.universe.Symbol] = baseSymbolClass.knownDirectSubclasses
+      val subclassesMap = subclasses.toList.map( readClassJsonAdt ).groupBy( _.jsonAdtType )
 
-			if(subclasses.isEmpty) {
-				c.abort(baseSymbol.pos, s"${baseSymbol} defines no sub classes")
-			}
-			else
-			subclassesMap.
-				find(_._2.length > 1) match {
-				case Some(duplicate) =>
-					c.abort(duplicate._2.head.symbol.pos, s"${duplicate._2.map(_.symbol.fullName).mkString(", ")} defined duplicate json type")
-				case _ =>
-					createConverterExpr(baseSymbol, subclassesMap.flatMap(_._2.headOption))
-			}
+      if (subclasses.isEmpty) {
+        c.abort( baseSymbol.pos, s"${baseSymbol} defines no sub classes" )
+      } else
+        subclassesMap.find( _._2.length > 1 ) match {
+          case Some( duplicate ) =>
+            c.abort(
+              duplicate._2.head.symbol.pos,
+              s"${duplicate._2.map( _.symbol.fullName ).mkString( ", " )} defined duplicate json type"
+            )
+          case _ =>
+            createConverterExpr( baseSymbol, subclassesMap.flatMap( _._2.headOption ) )
+        }
 
-		}
-		else {
-			c.abort(c.enclosingPosition, s"${baseSymbol.fullName} must be a trait or base class")
-		}
-	}
+    } else {
+      c.abort( c.enclosingPosition, s"${baseSymbol.fullName} must be a trait or base class" )
+    }
+  }
 }

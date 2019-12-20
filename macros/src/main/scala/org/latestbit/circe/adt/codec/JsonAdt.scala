@@ -19,7 +19,7 @@ package org.latestbit.circe.adt.codec
 import scala.annotation.StaticAnnotation
 
 /**
- * ADT / JSON coder/encoder annotation to provide Json type field values for case classes
- * @param jsonAdtType A JSON type field value for a case class
- */
-class JsonAdt(jsonAdtType : String) extends StaticAnnotation
+  * ADT / JSON coder/encoder annotation to provide Json type field values for case classes
+  * @param jsonAdtType A JSON type field value for a case class
+  */
+class JsonAdt( jsonAdtType: String ) extends StaticAnnotation

@@ -24,191 +24,202 @@ import org.latestbit.circe.adt.codec._
 import org.scalatest.flatspec.AnyFlatSpec
 
 object TestModels {
-	sealed trait TestEvent
+  sealed trait TestEvent
 
-	@JsonAdt("ev1")
-	case class TestEvent1(f1: String) extends TestEvent
+  @JsonAdt( "ev1" )
+  case class TestEvent1( f1: String ) extends TestEvent
 
-	@JsonAdt("ev2")
-	case class TestEvent2(f1: String) extends TestEvent
+  @JsonAdt( "ev2" )
+  case class TestEvent2( f1: String ) extends TestEvent
 
-	case class TestEvent3(f1: String) extends TestEvent
+  case class TestEvent3( f1: String ) extends TestEvent
 
-	sealed trait DupTagTestEvent
+  sealed trait DupTagTestEvent
 
-	@JsonAdt("dup-tag")
-	case class InvalidTestEvent1(f1: String) extends DupTagTestEvent
+  @JsonAdt( "dup-tag" )
+  case class InvalidTestEvent1( f1: String ) extends DupTagTestEvent
 
-	@JsonAdt("dup-tag")
-	case class InvalidTestEvent2(f1: String) extends DupTagTestEvent
+  @JsonAdt( "dup-tag" )
+  case class InvalidTestEvent2( f1: String ) extends DupTagTestEvent
 
-	sealed trait EmptyTestEvent
+  sealed trait EmptyTestEvent
 
-	sealed trait InvalidMultiTagTestEvent
+  sealed trait InvalidMultiTagTestEvent
 
-	@JsonAdt("dup-tag")
-	@JsonAdt("dup-tag")
-	case class InvalidMultiTagTestEvent1(f1: String) extends InvalidMultiTagTestEvent
+  @JsonAdt( "dup-tag" )
+  @JsonAdt( "dup-tag" )
+  case class InvalidMultiTagTestEvent1( f1: String ) extends InvalidMultiTagTestEvent
 
-	sealed trait NotAnnotatedTestEvent
-	case class NotAnnotatedTestEvent1(f1: String) extends NotAnnotatedTestEvent
-	case class NotAnnotatedTestEvent2(f1: String) extends NotAnnotatedTestEvent
+  sealed trait NotAnnotatedTestEvent
+  case class NotAnnotatedTestEvent1( f1: String ) extends NotAnnotatedTestEvent
+  case class NotAnnotatedTestEvent2( f1: String ) extends NotAnnotatedTestEvent
 
-	sealed trait InnerSubclassesTestEvent
-	object InnerSubclassesTestEvent {
-		case class InnerCaseClassTestEvent(test : String) extends InnerSubclassesTestEvent
-		case object InnerObjTestEvent extends InnerSubclassesTestEvent
-	}
+  sealed trait InnerSubclassesTestEvent
+
+  object InnerSubclassesTestEvent {
+
+    case class InnerCaseClassTestEvent( test: String ) extends InnerSubclassesTestEvent
+    case object InnerObjTestEvent extends InnerSubclassesTestEvent
+  }
 }
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
-	import TestModels._
+  import TestModels._
 
-	"A codec" should "be able to serialise case classes correctly" in {
-		implicit val encoder: Encoder[TestEvent] = JsonTaggedAdtCodec.createEncoder[TestEvent]("type")
+  "A codec" should "be able to serialise case classes correctly" in {
+    implicit val encoder: Encoder[TestEvent] =
+      JsonTaggedAdtCodec.createEncoder[TestEvent]( "type" )
 
-		val testEvent: TestEvent = TestEvent1("test")
-		val json: String = testEvent.asJson.dropNullValues.noSpaces
+    val testEvent: TestEvent = TestEvent1( "test" )
+    val json: String = testEvent.asJson.dropNullValues.noSpaces
 
-		assert(json.contains(""""type":"ev1""""))
-	}
+    assert( json.contains( """"type":"ev1"""" ) )
+  }
 
-	it should "be able to deserialise case classes" in {
-		implicit val decoder: Decoder[TestEvent] = JsonTaggedAdtCodec.createDecoder[TestEvent]("type")
+  it should "be able to deserialise case classes" in {
+    implicit val decoder: Decoder[TestEvent] =
+      JsonTaggedAdtCodec.createDecoder[TestEvent]( "type" )
 
-		val testJson = """{"type" : "ev2", "f1" : "test-data"}"""
+    val testJson = """{"type" : "ev2", "f1" : "test-data"}"""
 
-		decode[TestEvent](
-			testJson
-		) match {
-			case Right(model: TestEvent) => assert(model === TestEvent2("test-data"))
-			case Left(ex) => fail(ex)
-		}
-	}
+    decode[TestEvent](
+      testJson
+    ) match {
+      case Right( model: TestEvent ) =>
+        assert( model === TestEvent2( "test-data" ) )
+      case Left( ex ) => fail( ex )
+    }
+  }
 
-	it should "check for unknown or absent type field in json in decoder" in {
-		implicit val decoder: Decoder[TestEvent] = JsonTaggedAdtCodec.createDecoder[TestEvent]("type")
+  it should "check for unknown or absent type field in json in decoder" in {
+    implicit val decoder: Decoder[TestEvent] =
+      JsonTaggedAdtCodec.createDecoder[TestEvent]( "type" )
 
-		val testJson1 = """{"type" : "ev3", "f1" : "test-data"}"""
-		val testJson2 = """{"type2" : "ev2", "f1" : "test-data"}"""
+    val testJson1 = """{"type" : "ev3", "f1" : "test-data"}"""
+    val testJson2 = """{"type2" : "ev2", "f1" : "test-data"}"""
 
-		Seq(testJson1, testJson2).map { testJson =>
-			decode[TestEvent](
-				testJson
-			) match {
-				case Right(model) => fail(model.toString)
-				case Left(ex) => assert(ex.getMessage.nonEmpty)
-			}
-		}
+    Seq( testJson1, testJson2 ).map { testJson =>
+      decode[TestEvent](
+        testJson
+      ) match {
+        case Right( model ) => fail( model.toString )
+        case Left( ex )     => assert( ex.getMessage.nonEmpty )
+      }
+    }
 
-	}
+  }
 
-	it should "able to serialise and deserialise unannotated case classes" in {
-		implicit val encoder: Encoder[NotAnnotatedTestEvent] = JsonTaggedAdtCodec.createEncoder[NotAnnotatedTestEvent]("type")
-		implicit val decoder: Decoder[NotAnnotatedTestEvent] = JsonTaggedAdtCodec.createDecoder[NotAnnotatedTestEvent]("type")
+  it should "able to serialise and deserialise unannotated case classes" in {
+    implicit val encoder: Encoder[NotAnnotatedTestEvent] =
+      JsonTaggedAdtCodec.createEncoder[NotAnnotatedTestEvent]( "type" )
+    implicit val decoder: Decoder[NotAnnotatedTestEvent] =
+      JsonTaggedAdtCodec.createDecoder[NotAnnotatedTestEvent]( "type" )
 
-		val testEvent: NotAnnotatedTestEvent = NotAnnotatedTestEvent1("test")
-		val testJson: String = testEvent.asJson.dropNullValues.noSpaces
+    val testEvent: NotAnnotatedTestEvent = NotAnnotatedTestEvent1( "test" )
+    val testJson: String = testEvent.asJson.dropNullValues.noSpaces
 
-		decode[NotAnnotatedTestEvent](
-			testJson
-		) match {
-			case Right(model) => assert(model === testEvent)
-			case Left(ex) => fail(ex)
-		}
+    decode[NotAnnotatedTestEvent](
+      testJson
+    ) match {
+      case Right( model ) => assert( model === testEvent )
+      case Left( ex )     => fail( ex )
+    }
 
-	}
+  }
 
+  it should "be able to encode/decode inner case classes and objects" in {
+    implicit val encoder: Encoder[InnerSubclassesTestEvent] =
+      JsonTaggedAdtCodec.createEncoder[InnerSubclassesTestEvent]( "type" )
+    implicit val decoder: Decoder[InnerSubclassesTestEvent] =
+      JsonTaggedAdtCodec.createDecoder[InnerSubclassesTestEvent]( "type" )
 
-	it should "be able to encode/decode inner case classes and objects" in {
-		implicit val encoder: Encoder[InnerSubclassesTestEvent] = JsonTaggedAdtCodec.createEncoder[InnerSubclassesTestEvent]("type")
-		implicit val decoder: Decoder[InnerSubclassesTestEvent] = JsonTaggedAdtCodec.createDecoder[InnerSubclassesTestEvent]("type")
+    val testEvent: InnerSubclassesTestEvent =
+      InnerSubclassesTestEvent.InnerObjTestEvent
+    val testJson: String = testEvent.asJson.dropNullValues.noSpaces
 
-		val testEvent: InnerSubclassesTestEvent = InnerSubclassesTestEvent.InnerObjTestEvent
-		val testJson: String = testEvent.asJson.dropNullValues.noSpaces
+    decode[InnerSubclassesTestEvent](
+      testJson
+    ) match {
+      case Right( model ) => assert( model === testEvent )
+      case Left( ex )     => fail( ex )
+    }
+  }
 
-		decode[InnerSubclassesTestEvent](
-			testJson
-		) match {
-			case Right(model) => assert(model === testEvent)
-			case Left(ex) => fail(ex)
-		}
-	}
-
-	it should "be able to detect duplicate tags at compile time" in {
-		assertDoesNotCompile(
-			"""
+  it should "be able to detect duplicate tags at compile time" in {
+    assertDoesNotCompile(
+      """
 			  | implicit val encoder : Encoder[DupTagTestEvent] = JsonTaggedAdtCodec.createEncoder[DupTagTestEvent]("type")
 			  |""".stripMargin
-		)
-	}
+    )
+  }
 
-	it should "be able to detect empty sealed traits at compile time" in {
-		assertDoesNotCompile(
-			"""
-			  | implicit val encoder : Encoder[EmptyTestEvent] = JsonTaggedAdtCodec.createEncoder[EmptyTestEvent]("type")
-			  |""".stripMargin
-		)
-	}
+  it should "be able to detect empty sealed traits at compile time" in {
+    assertDoesNotCompile(
+      """
+	  | implicit val encoder : Encoder[EmptyTestEvent] = JsonTaggedAdtCodec.createEncoder[EmptyTestEvent]("type")
+	  |""".stripMargin
+    )
+  }
 
-	it should "be able to detect multiple annotations at compile time" in {
-		assertDoesNotCompile(
-			"""
-			  | implicit val encoder : Encoder[InvalidMultiTagTestEvent] = JsonTaggedAdtCodec.createEncoder[InvalidMultiTagTestEvent]("type")
-			  |""".stripMargin
-		)
-	}
+  it should "be able to detect multiple annotations at compile time" in {
+    assertDoesNotCompile(
+      """
+	  | implicit val encoder : Encoder[InvalidMultiTagTestEvent] = JsonTaggedAdtCodec.createEncoder[InvalidMultiTagTestEvent]("type")
+	  |""".stripMargin
+    )
+  }
 
-	it should "be able to configured with custom implementation of encoder" in {
+  it should "be able to configured with custom implementation of encoder" in {
 
-		implicit val encoder: Encoder[TestEvent] =
-			JsonTaggedAdtCodec.
-				createEncoderDefinition[TestEvent] { case (converter, obj) =>
+    implicit val encoder: Encoder[TestEvent] =
+      JsonTaggedAdtCodec.createEncoderDefinition[TestEvent] {
+        case ( converter, obj ) =>
+          // converting our case classes accordingly to obj instance type
+          // and receiving JSON type field value from annotation
+          val ( jsonObj, typeFieldValue ) = converter.toJsonObject( obj )
 
-					// converting our case classes accordingly to obj instance type
-					// and receiving JSON type field value from annotation
-					val (jsonObj, typeFieldValue) = converter.toJsonObject(obj)
+          // Our custom JSON structure
+          JsonObject(
+            "type" -> Json.fromString( typeFieldValue ),
+            "body" -> Json.fromJsonObject( jsonObj )
+          )
+      }
 
-					// Our custom JSON structure
-					JsonObject(
-						"type" -> Json.fromString(typeFieldValue),
-						"body" -> Json.fromJsonObject(jsonObj)
-					)
-				}
+    val testEvent: TestEvent = TestEvent1( "test" )
+    val json: String = testEvent.asJson.dropNullValues.noSpaces
 
-		val testEvent: TestEvent = TestEvent1("test")
-		val json: String = testEvent.asJson.dropNullValues.noSpaces
+    assert( json.contains( """"type":"ev1"""" ) )
+    assert( json.contains( """"body":{""" ) )
+  }
 
-		assert(json.contains(""""type":"ev1""""))
-		assert(json.contains(""""body":{"""))
-	}
+  it should "be able to configured with custom implementation of decoder" in {
 
-	it should "be able to configured with custom implementation of decoder" in {
+    implicit val decoder: Decoder[TestEvent] =
+      JsonTaggedAdtCodec.createDecoderDefinition[TestEvent] {
+        case ( converter, cursor ) =>
+          cursor.get[Option[String]]( "type" ).flatMap {
+            case Some( typeFieldValue ) =>
+              // Decode a case class from body accordingly to typeFieldValue
+              converter.fromJsonObject(
+                jsonTypeFieldValue = typeFieldValue,
+                cursor = cursor.downField( "body" )
+              )
+            case _ =>
+              Decoder.failedWithMessage( s"'type' isn't specified in json." )(
+                cursor
+              )
+          }
+      }
 
-		implicit val decoder: Decoder[TestEvent] =
-			JsonTaggedAdtCodec.
-				createDecoderDefinition[TestEvent] { case (converter, cursor) =>
+    val testJson = """{"type" : "ev2", "body" : { "f1" : "test-data" } }"""
 
-					cursor.get[Option[String]]("type").flatMap {
-						case Some(typeFieldValue) =>
-							// Decode a case class from body accordingly to typeFieldValue
-							converter.fromJsonObject(
-								jsonTypeFieldValue = typeFieldValue,
-								cursor = cursor.downField("body")
-							)
-						case _ =>
-							Decoder.failedWithMessage(s"'type' isn't specified in json.")(cursor)
-					}
-				}
-
-		val testJson = """{"type" : "ev2", "body" : { "f1" : "test-data" } }"""
-
-		decode[TestEvent](
-			testJson
-		) match {
-			case Right(model: TestEvent) => assert(model === TestEvent2("test-data"))
-			case Left(ex) => fail(ex)
-		}
-	}
+    decode[TestEvent](
+      testJson
+    ) match {
+      case Right( model: TestEvent ) =>
+        assert( model === TestEvent2( "test-data" ) )
+      case Left( ex ) => fail( ex )
+    }
+  }
 
 }
