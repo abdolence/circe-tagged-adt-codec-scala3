@@ -53,6 +53,12 @@ object TestModels {
 	sealed trait NotAnnotatedTestEvent
 	case class NotAnnotatedTestEvent1(f1: String) extends NotAnnotatedTestEvent
 	case class NotAnnotatedTestEvent2(f1: String) extends NotAnnotatedTestEvent
+
+	sealed trait InnerSubclassesTestEvent
+	object InnerSubclassesTestEvent {
+		case class InnerCaseClassTestEvent(test : String) extends InnerSubclassesTestEvent
+		case object InnerObjTestEvent extends InnerSubclassesTestEvent
+	}
 }
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
@@ -111,6 +117,22 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 			case Left(ex) => fail(ex)
 		}
 
+	}
+
+
+	it should "be able to encode/decode inner case classes and objects" in {
+		implicit val encoder: Encoder[InnerSubclassesTestEvent] = JsonTaggedAdtCodec.createEncoder[InnerSubclassesTestEvent]("type")
+		implicit val decoder: Decoder[InnerSubclassesTestEvent] = JsonTaggedAdtCodec.createDecoder[InnerSubclassesTestEvent]("type")
+
+		val testEvent: InnerSubclassesTestEvent = InnerSubclassesTestEvent.InnerObjTestEvent
+		val testJson: String = testEvent.asJson.dropNullValues.noSpaces
+
+		decode[InnerSubclassesTestEvent](
+			testJson
+		) match {
+			case Right(model) => assert(model === testEvent)
+			case Left(ex) => fail(ex)
+		}
 	}
 
 	it should "be able to detect duplicate tags at compile time" in {
@@ -188,4 +210,5 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 			case Left(ex) => fail(ex)
 		}
 	}
+
 }

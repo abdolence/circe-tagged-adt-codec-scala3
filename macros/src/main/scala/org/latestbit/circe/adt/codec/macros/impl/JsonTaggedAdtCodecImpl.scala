@@ -31,7 +31,10 @@ object JsonTaggedAdtCodecImpl {
 	def encodeObjImpl[T : c.WeakTypeTag](c : blackbox.Context) : c.Expr[JsonTaggedAdtConverter[T]] = {
 		import c.universe._
 
-		case class JsonAdtConfig(jsonAdtType : String, symbol: Symbol)
+		case class JsonAdtConfig(jsonAdtType : String, symbol: Symbol) {
+			lazy val hasDataToEncode : Boolean =
+				!symbol.asClass.isModuleClass
+		}
 
 		def isJsonAdtAnnotation(annotation : Annotation) =  {
 			annotation.tree.tpe =:= typeOf[JsonAdt]
@@ -66,7 +69,12 @@ object JsonTaggedAdtCodecImpl {
 
 								obj match {
 	                                case ..${caseClassesConfig.map { jsonAdtConfig =>
-										cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
+										if(jsonAdtConfig.hasDataToEncode) {
+											cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
+										}
+										else {
+											cq"ev : ${jsonAdtConfig.symbol} => (JsonObject(),${jsonAdtConfig.jsonAdtType}) "
+										}
 									}}
 	                            }
 	                        }
@@ -93,7 +101,8 @@ object JsonTaggedAdtCodecImpl {
 		val baseSymbol = c.symbolOf[T]
 
 		if(baseSymbol.isClass) {
-			val subclasses: Set[c.universe.Symbol] = c.symbolOf[T].asClass.knownDirectSubclasses
+			val baseSymbolClass = c.symbolOf[T].asClass
+			val subclasses: Set[c.universe.Symbol] = baseSymbolClass.knownDirectSubclasses
 			val subclassesMap = subclasses.toList.map(readClassJsonAdt).groupBy(_.jsonAdtType)
 
 			if(subclasses.isEmpty) {
