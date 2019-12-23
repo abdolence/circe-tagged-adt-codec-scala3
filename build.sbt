@@ -2,6 +2,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{ ZoneOffset, ZonedDateTime }
 
 import sbt.Package.ManifestAttributes
+import sbtcrossproject.CrossPlugin.autoImport.{ crossProject, CrossType }
 
 name := "circe-tagged-adt-codec-root"
 
@@ -90,7 +91,7 @@ ThisBuild / packageOptions := Seq(
 val circeVersion = "0.12.3"
 val scalaTestVersion = "3.1.0"
 
-val baseDependencies =
+val baseJvmDependencies =
   Seq(
     "io.circe" %% "circe-core",
     "io.circe" %% "circe-generic",
@@ -101,6 +102,19 @@ val baseDependencies =
       "org.scalatest" %% "scalatest"
     ).map( _ % scalaTestVersion % "test" )
 
+val baseJsDependencies =
+  Def.setting(
+    Seq(
+      "io.circe" %%% "circe-core",
+      "io.circe" %%% "circe-generic",
+      "io.circe" %%% "circe-parser"
+    ).map( _ % circeVersion ) ++
+      Seq(
+        "org.scalactic" %%% "scalactic",
+        "org.scalatest" %%% "scalatest"
+      ).map( _ % scalaTestVersion % "test" )
+  )
+
 lazy val circeTaggedAdtCodecRoot =
   (project in file( "." ))
     .aggregate( circeTaggedAdtCodecMacros, circeTaggedAdtCodecLib )
@@ -110,18 +124,70 @@ lazy val circeTaggedAdtCodecRoot =
       crossScalaVersions := List()
     )
 
-lazy val circeTaggedAdtCodecMacros =
-  (project in file( "macros" )).settings(
-    name := "circe-tagged-adt-codec-macros",
-    libraryDependencies ++= baseDependencies ++ Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value
+lazy val circeTaggedAdtCodecModels =
+  project
+    .in( file( "models" ) )
+    .aggregate( circeTaggedAdtCodecModelsJVM, circeTaggedAdtCodecModelsJS )
+    .settings(
+      name := "circe-tagged-adt-codec-models",
+      publish := {},
+      publishLocal := {},
+      crossScalaVersions := List()
     )
+
+lazy val circeTaggedAdtCodecModelsCross = crossProject( JSPlatform, JVMPlatform )
+  .withoutSuffixFor( JVMPlatform )
+  .crossType( CrossType.Full )
+  .in( file( "models" ) )
+  .settings(
+    name := "circe-tagged-adt-codec-models"
+  )
+  .jvmSettings(
+    libraryDependencies ++= baseJvmDependencies ++ Seq()
+  )
+  .jsSettings(
+    libraryDependencies ++= baseJsDependencies.value ++ Seq()
   )
 
+lazy val circeTaggedAdtCodecModelsJVM = circeTaggedAdtCodecModelsCross.jvm
+lazy val circeTaggedAdtCodecModelsJS = circeTaggedAdtCodecModelsCross.js
+
+lazy val circeTaggedAdtCodecMacros =
+  (project in file( "macros" ))
+    .settings(
+      name := "circe-tagged-adt-codec-macros",
+      libraryDependencies ++= baseJvmDependencies ++ Seq(
+        "org.scala-lang" % "scala-reflect" % scalaVersion.value
+      )
+    )
+    .dependsOn( circeTaggedAdtCodecModelsJVM )
+
 lazy val circeTaggedAdtCodecLib =
-  (project in file( "lib" ))
+  project
+    .in( file( "lib" ) )
+    .aggregate( circeTaggedAdtCodecLibJVM, circeTaggedAdtCodecLibJS )
     .settings(
       name := "circe-tagged-adt-codec",
-      libraryDependencies ++= baseDependencies ++ Seq()
+      publish := {},
+      publishLocal := {},
+      crossScalaVersions := List()
     )
-    .dependsOn( circeTaggedAdtCodecMacros )
+
+lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
+  .withoutSuffixFor( JVMPlatform )
+  .crossType( CrossType.Full )
+  .in( file( "lib" ) )
+  .settings(
+    name := "circe-tagged-adt-codec"
+  )
+  .jvmSettings(
+    libraryDependencies ++= baseJvmDependencies ++ Seq()
+  )
+  .jsSettings(
+    libraryDependencies ++= baseJsDependencies.value ++ Seq()
+  )
+  .jvmConfigure( _ dependsOn (circeTaggedAdtCodecModelsJVM, circeTaggedAdtCodecMacros) )
+  .jsConfigure( _ dependsOn (circeTaggedAdtCodecModelsJS, circeTaggedAdtCodecMacros) )
+
+lazy val circeTaggedAdtCodecLibJVM = circeTaggedAdtCodecLibCross.jvm
+lazy val circeTaggedAdtCodecLibJS = circeTaggedAdtCodecLibCross.js
