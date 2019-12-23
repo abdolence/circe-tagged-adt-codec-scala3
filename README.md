@@ -1,12 +1,11 @@
-## Circe encoder/decoder implementation for ADT to JSON with a type field for Scala 2.12+
+## Circe encoder/decoder implementation for ADT to JSON with a type field+
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.latestbit/circe-tagged-adt-codec_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.latestbit/circe-tagged-adt-codec_2.13/)
 ![](https://github.com/abdolence/circe-tagged-adt-codec/workflows/Scala%20CI/badge.svg)
 
-
-This macro based library provides an efficient, type safe 
+This library provides an efficient, type safe and macro based 
 ADT to JSON encoder/decoder for circe with configurable JSON type field mappings.
 
-When you have case classes defined like this
+When you have ADTs (as trait and case classes) defined like this
 ```scala
 sealed trait TestEvent
 
@@ -31,11 +30,15 @@ The main objectives here are:
 - Avoid writing circe Encoder/Decoder manually.
 - Check at the compile time JSON type field mappings and Scala case classes.
 
+### Scala support
+- Scala v2.12+
+- Scala.js v0.6.28+
+
 ### Getting Started
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.2.2"
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.3.0"
 ```
 
 ### Usage

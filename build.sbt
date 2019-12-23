@@ -6,7 +6,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{ crossProject, CrossType }
 
 name := "circe-tagged-adt-codec-root"
 
-ThisBuild / version := "0.3.0-SNAPSHOT"
+ThisBuild / version := "0.3.0"
 
 ThisBuild / organization := "org.latestbit"
 
