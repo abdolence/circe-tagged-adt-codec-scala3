@@ -65,12 +65,12 @@ object JsonTaggedAdtCodecImpl {
 		c.Expr[JsonTaggedAdtConverter[T]] (
 		q"""
 			   new JsonTaggedAdtConverter[${traitSymbol}] {
-                    import io.circe.{ JsonObject, Decoder, ACursor, DecodingFailure }
-
+	                import io.circe.{ JsonObject, Decoder, ACursor, DecodingFailure }
+	
 					override def toJsonObject(obj: ${traitSymbol}): (JsonObject, String) = {
-
+	
 						obj match {
-                            case ..${caseClassesConfig.map { jsonAdtConfig =>
+	                        case ..${caseClassesConfig.map { jsonAdtConfig =>
 								if(jsonAdtConfig.hasDataToEncode) {
 									cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
 								}
@@ -78,11 +78,11 @@ object JsonTaggedAdtCodecImpl {
 									cq"ev : ${jsonAdtConfig.symbol} => (JsonObject(),${jsonAdtConfig.jsonAdtType}) "
 								}
 							}}
-                        }
-                    }
-
+	                    }
+	                }
+	
 			        override def fromJsonObject(jsonTypeFieldValue : String, cursor: ACursor) : Decoder.Result[${traitSymbol}] = {
-
+	
 			            jsonTypeFieldValue match {
 	                        case ..${caseClassesConfig.
 								map { jsonAdtConfig =>
@@ -93,11 +93,11 @@ object JsonTaggedAdtCodecImpl {
 									"""
 							}
 	                    }
-                    }
+	                }
 				}
 			 """
 		) 
-		// format: on
+	    // format: on
     }
 
     val baseSymbol = c.symbolOf[T]
