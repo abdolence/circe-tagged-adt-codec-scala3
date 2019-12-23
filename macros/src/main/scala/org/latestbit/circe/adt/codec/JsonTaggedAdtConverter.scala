@@ -25,19 +25,19 @@ import io.circe.{ ACursor, Decoder, JsonObject }
 trait JsonTaggedAdtConverter[T] {
 
   /**
-	* Convert a trait to circe JsonObject
-	* @param obj an instance of T
-	* @return Encoded JSON object and its JSON type field value
-	*/
+    * Convert a trait to circe JsonObject
+    * @param obj an instance of T
+    * @return Encoded JSON object and its JSON type field value
+    */
   def toJsonObject( obj: T ): ( JsonObject, String )
 
   /**
-	* Convert a current JSON context specified with a cursor and a JSON type field value
-	* to suitable case class instance
-	* @param jsonTypeFieldValue a JSON type field value
-	* @param cursor JSON decoding cursor
-	* @return decoding result of the instance of a case class, accordingly to a jsonTypeFieldValue and a trait type
-	*/
+    * Convert a current JSON context specified with a cursor and a JSON type field value
+    * to suitable case class instance
+    * @param jsonTypeFieldValue a JSON type field value
+    * @param cursor JSON decoding cursor
+    * @return decoding result of the instance of a case class, accordingly to a jsonTypeFieldValue and a trait type
+    */
   def fromJsonObject(
       jsonTypeFieldValue: String,
       cursor: ACursor
