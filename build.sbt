@@ -29,7 +29,7 @@ ThisBuild / scalacOptions ++= Seq( "-feature" )
 
 ThisBuild / exportJars := true
 
-publishMavenStyle := true
+ThisBuild / publishMavenStyle := true
 
 ThisBuild / publishTo := {
   val nexus = "https://oss.sonatype.org/"
@@ -117,7 +117,7 @@ val baseJsDependencies =
 
 lazy val circeTaggedAdtCodecRoot =
   (project in file( "." ))
-    .aggregate( circeTaggedAdtCodecMacros, circeTaggedAdtCodecLib )
+    .aggregate( circeTaggedAdtCodecModels, circeTaggedAdtCodecMacros, circeTaggedAdtCodecLib )
     .settings(
       publish := {},
       publishLocal := {},
