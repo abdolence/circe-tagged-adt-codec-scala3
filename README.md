@@ -3,8 +3,8 @@
 ![](https://github.com/abdolence/circe-tagged-adt-codec/workflows/Scala%20CI/badge.svg)
 
 
-This is a tiny (yet macro based) library to provide an efficient, type safe 
-ADT to JSON encoder/decoder for circe with configurable JSON type field.
+This macro based library provides an efficient, type safe 
+ADT to JSON encoder/decoder for circe with configurable JSON type field mappings.
 
 When you have case classes defined like this
 ```scala
@@ -26,10 +26,10 @@ and you would like to encode them to JSON like this:
 ```
 
 The main objectives here are:
-- Avoid JSON type field in Scala case class definitions. It needs only for coding purposes here
+- Avoid JSON type field in Scala case class definitions.
 - Configurable JSON type field values and their mapping to case classes. They don't have to be Scala class names.
-- Avoid writing circe Encoder/Decoder manually
-- Check at the compile time JSON type field mappings and Scala case classes
+- Avoid writing circe Encoder/Decoder manually.
+- Check at the compile time JSON type field mappings and Scala case classes.
 
 ### Getting Started
 Add the following to your `build.sbt`:
