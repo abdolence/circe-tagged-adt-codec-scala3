@@ -10,7 +10,7 @@ ThisBuild / version := "0.3.0"
 
 ThisBuild / organization := "org.latestbit"
 
-ThisBuild / homepage := Some( url( "https://latestbit.com" ) )
+ThisBuild / homepage := Some( url( "https://github.com/abdolence/circe-tagged-adt-codec" ) )
 
 ThisBuild / licenses := Seq(
   (
