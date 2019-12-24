@@ -65,8 +65,9 @@ ThisBuild / scalacOptions ++= Seq(
   "-feature",
   "-language:higherKinds"
 ) ++ (CrossVersion.partialVersion( (ThisBuild / scalaVersion).value ) match {
-  case Some( ( 2, n ) ) if n < 13 => Seq( "-Ypartial-unification" )
-  case _                          => Seq()
+  case Some( ( 2, n ) ) if n >= 13 => Seq( "-Xsource:2.14" )
+  case Some( ( 2, n ) ) if n < 13  => Seq( "-Ypartial-unification" )
+  case _                           => Seq()
 })
 
 ThisBuild / javacOptions ++= Seq(

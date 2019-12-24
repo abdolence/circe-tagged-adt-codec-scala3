@@ -31,9 +31,10 @@ object JsonTaggedAdtCodecImpl {
   def encodeObjImpl[T : c.WeakTypeTag]( c: blackbox.Context ): c.Expr[JsonTaggedAdtConverter[T]] = {
     import c.universe._
 
+    // Scala v2.13.1 compiler has a warning bug for this (https://github.com/scala/scala/pull/8609)
+    // Should be fixed in v2.13.2
     case class JsonAdtConfig( jsonAdtType: String, symbol: Symbol ) {
-      lazy val hasDataToEncode: Boolean =
-        !symbol.asClass.isModuleClass
+      def hasDataToEncode(): Boolean = !(symbol.asClass.isModuleClass)
     }
 
     def isJsonAdtAnnotation( annotation: Annotation ) = {
@@ -71,7 +72,7 @@ object JsonTaggedAdtCodecImpl {
 	
 						obj match {
 	                        case ..${caseClassesConfig.map { jsonAdtConfig =>
-								if(jsonAdtConfig.hasDataToEncode) {
+								if(jsonAdtConfig.hasDataToEncode()) {
 									cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
 								}
 								else {
