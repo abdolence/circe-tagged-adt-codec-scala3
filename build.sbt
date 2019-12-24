@@ -1,12 +1,12 @@
 import java.time.format.DateTimeFormatter
 import java.time.{ ZoneOffset, ZonedDateTime }
-
 import sbt.Package.ManifestAttributes
-import sbtcrossproject.CrossPlugin.autoImport.{ crossProject, CrossType }
+import sbtcrossproject.CrossType
+import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 name := "circe-tagged-adt-codec-root"
 
-ThisBuild / version := "0.3.0"
+ThisBuild / version := "0.4.0-SNAPSHOT"
 
 ThisBuild / organization := "org.latestbit"
 
@@ -19,9 +19,9 @@ ThisBuild / licenses := Seq(
   )
 )
 
-ThisBuild / scalaVersion := "2.12.10"
-
 ThisBuild / crossScalaVersions := Seq( "2.12.10", "2.13.1" )
+
+ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.head
 
 ThisBuild / sbtVersion := "1.3.5"
 
@@ -63,9 +63,11 @@ ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
   "-unchecked",
   "-feature",
-  "-Xsource:2.12",
   "-language:higherKinds"
-)
+) ++ (CrossVersion.partialVersion( (ThisBuild / scalaVersion).value ) match {
+  case Some( ( 2, n ) ) if n < 13 => Seq( "-Ypartial-unification" )
+  case _                          => Seq()
+})
 
 ThisBuild / javacOptions ++= Seq(
   "-Xlint:deprecation",
