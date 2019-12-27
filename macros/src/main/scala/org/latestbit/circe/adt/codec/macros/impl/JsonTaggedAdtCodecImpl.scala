@@ -24,10 +24,10 @@ import scala.reflect.macros.blackbox
 object JsonTaggedAdtCodecImpl {
 
   /**
-    * ADT / JSON type field based trait encoding and decoding implementation as a macro
-    * @tparam T a trait type
-    * @return a converter instance of T
-    */
+   * ADT / JSON type field based trait encoding and decoding implementation as a macro
+   * @tparam T a trait type
+   * @return a converter instance of T
+   */
   def encodeObjImpl[T : c.WeakTypeTag]( c: blackbox.Context ): c.Expr[JsonTaggedAdtConverter[T]] = {
     import c.universe._
 

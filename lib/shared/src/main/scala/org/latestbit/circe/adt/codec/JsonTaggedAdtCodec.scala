@@ -19,19 +19,19 @@ package org.latestbit.circe.adt.codec
 import io.circe.{ Decoder, Encoder, HCursor, Json, JsonObject }
 
 /**
-  * Object provides access to the factory methods for circe Encoder/Decoder
-  */
+ * Object provides access to the factory methods for circe Encoder/Decoder
+ */
 object JsonTaggedAdtCodec {
 
   /**
-    * Default implementation of encoding JSON with a type field
-    *
-    * @param typeFieldName a JSON field name to encode type name
-    * @param converter     converter for trait and its case classes
-    * @param obj           an object to encode
-    * @tparam T A trait type
-    * @return Encoded json object with a type field
-    */
+   * Default implementation of encoding JSON with a type field
+   *
+   * @param typeFieldName a JSON field name to encode type name
+   * @param converter     converter for trait and its case classes
+   * @param obj           an object to encode
+   * @tparam T A trait type
+   * @return Encoded json object with a type field
+   */
   protected def defaultJsonTypeFieldEncoder[T](
       typeFieldName: String
   )( converter: JsonTaggedAdtConverter[T], obj: T ): JsonObject = {
@@ -40,14 +40,14 @@ object JsonTaggedAdtCodec {
   }
 
   /**
-    * Default implementation of decoding JSON with a type field
-    *
-    * @param typeFieldName a JSON field name to decode type name
-    * @param converter     converter for trait and its case classes
-    * @param cursor        JSON context cursor
-    * @tparam T A trait type
-    * @return Decode result
-    */
+   * Default implementation of decoding JSON with a type field
+   *
+   * @param typeFieldName a JSON field name to decode type name
+   * @param converter     converter for trait and its case classes
+   * @param cursor        JSON context cursor
+   * @tparam T A trait type
+   * @return Decode result
+   */
   protected def defaultJsonTypeFieldDecoder[T](
       typeFieldName: String
   )(
@@ -69,13 +69,13 @@ object JsonTaggedAdtCodec {
   }
 
   /**
-    * Create ADT / JSON type field base encoder with a specified type field encoding implementation
-    *
-    * @param typeFieldEncoder JSON type field encoding implementation
-    * @param converter        implicitly created JSON converter for trait and its case classes
-    * @tparam T A trait type
-    * @return circe Encoder of T
-    */
+   * Create ADT / JSON type field base encoder with a specified type field encoding implementation
+   *
+   * @param typeFieldEncoder JSON type field encoding implementation
+   * @param converter        implicitly created JSON converter for trait and its case classes
+   * @tparam T A trait type
+   * @return circe Encoder of T
+   */
   def createEncoderDefinition[T](
       typeFieldEncoder: ( JsonTaggedAdtConverter[T], T ) => JsonObject
   )( implicit converter: JsonTaggedAdtConverter[T] ): Encoder.AsObject[T] =
@@ -84,13 +84,13 @@ object JsonTaggedAdtCodec {
     }
 
   /**
-    * Create ADT / JSON type field base encoder
-    *
-    * @param typeFieldName a JSON field name to encode type name
-    * @param converter     implicitly created JSON converter for trait and its case classes
-    * @tparam T A trait type
-    * @return circe Encoder of T
-    */
+   * Create ADT / JSON type field base encoder
+   *
+   * @param typeFieldName a JSON field name to encode type name
+   * @param converter     implicitly created JSON converter for trait and its case classes
+   * @tparam T A trait type
+   * @return circe Encoder of T
+   */
   def createEncoder[T](
       typeFieldName: String
   )( implicit converter: JsonTaggedAdtConverter[T] ): Encoder.AsObject[T] =
