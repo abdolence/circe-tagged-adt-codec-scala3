@@ -44,7 +44,7 @@ libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.3.0"
 or if you need Scala.js support:
 
 ```scala
-libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.3.0"
+libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.4.0"
 ```
 
 ### Usage
