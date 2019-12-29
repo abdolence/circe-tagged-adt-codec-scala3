@@ -38,13 +38,13 @@ The main objectives here are:
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.4.0"
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.4.1"
 ```
 
 or if you need Scala.js support:
 
 ```scala
-libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.4.0"
+libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.4.1"
 ```
 
 ### Usage

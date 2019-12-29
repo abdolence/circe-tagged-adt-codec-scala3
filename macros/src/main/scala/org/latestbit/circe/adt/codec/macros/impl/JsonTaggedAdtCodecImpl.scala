@@ -77,7 +77,7 @@ object JsonTaggedAdtCodecImpl {
                     ): Decoder[${caseClassConfig.symbol}] = decoder
                        
 					override def toJsonObject(obj: ${caseClassConfig.symbol}): (JsonObject, String) = {                          
-                        (implicitDerivedEncoder.encodeObject(obj).asJsonObject,${caseClassConfig.jsonAdtType})
+                        (implicitDerivedEncoder.encodeObject(obj),${caseClassConfig.jsonAdtType})
 	                }
 	
 			        override def fromJsonObject(jsonTypeFieldValue : String, cursor: ACursor) : Decoder.Result[${caseClassConfig.symbol}] = {
@@ -102,6 +102,7 @@ object JsonTaggedAdtCodecImpl {
 		q"""
 			   new JsonTaggedAdtConverter[${traitSymbol}] {
 	                import io.circe.{ JsonObject, Decoder, ACursor, DecodingFailure }
+                    import io.circe.syntax._
 	
 					override def toJsonObject(obj: ${traitSymbol}): (JsonObject, String) = {
 	
