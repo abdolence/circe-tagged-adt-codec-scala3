@@ -61,6 +61,9 @@ object TestModels {
     case class InnerCaseClassTestEvent( test: String ) extends InnerSubclassesTestEvent
     case object InnerObjTestEvent extends InnerSubclassesTestEvent
   }
+
+  sealed trait EmptyCaseClassParentTestEvent
+  case class EmptyCaseClassTestEvent() extends EmptyCaseClassParentTestEvent
 }
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
@@ -138,6 +141,24 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
     val testJson: String = testEvent.asJson.dropNullValues.noSpaces
 
     decode[InnerSubclassesTestEvent](
+      testJson
+    ) match {
+      case Right( model ) => assert( model === testEvent )
+      case Left( ex )     => fail( ex )
+    }
+  }
+
+  it should "be able to encode/decode empty case classes" in {
+    implicit val encoder: Encoder[EmptyCaseClassParentTestEvent] =
+      JsonTaggedAdtCodec.createEncoder[EmptyCaseClassParentTestEvent]( "type" )
+    implicit val decoder: Decoder[EmptyCaseClassParentTestEvent] =
+      JsonTaggedAdtCodec.createDecoder[EmptyCaseClassParentTestEvent]( "type" )
+
+    val testEvent: EmptyCaseClassParentTestEvent =
+      EmptyCaseClassTestEvent()
+    val testJson: String = testEvent.asJson.dropNullValues.noSpaces
+
+    decode[EmptyCaseClassParentTestEvent](
       testJson
     ) match {
       case Right( model ) => assert( model === testEvent )
