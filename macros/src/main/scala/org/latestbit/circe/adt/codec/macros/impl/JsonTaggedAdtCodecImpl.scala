@@ -34,7 +34,7 @@ object JsonTaggedAdtCodecImpl {
     // Scala v2.13.1 compiler has a warning bug for this (https://github.com/scala/scala/pull/8609)
     // Should be fixed in v2.13.2
     case class JsonAdtConfig( jsonAdtType: String, symbol: Symbol ) {
-      def hasDataToEncode(): Boolean = !(symbol.asClass.isModuleClass)
+      def hasDataToEncode(): Boolean = !symbol.asClass.isModuleClass
     }
 
     def isJsonAdtAnnotation( annotation: Annotation ) = {
@@ -59,6 +59,41 @@ object JsonTaggedAdtCodecImpl {
             JsonAdtConfig( symbol.name.decodedName.toString, symbol )
           )
       }
+    }
+
+    def createSingleClassConverterExpr( caseClassConfig: JsonAdtConfig ) = {
+      // format: off
+          c.Expr[JsonTaggedAdtConverter[T]] (
+              q"""
+			   new JsonTaggedAdtConverter[${caseClassConfig.symbol}] {
+	                import io.circe.{ JsonObject, Encoder, Decoder, ACursor, DecodingFailure }
+	
+                    protected def implicitDerivedEncoder(
+                        implicit encoder: Encoder.AsObject[${caseClassConfig.symbol}]
+                    ): Encoder.AsObject[${caseClassConfig.symbol}] = encoder
+
+                    protected def implicitDerivedDecoder(
+                        implicit decoder: Decoder[${caseClassConfig.symbol}]
+                    ): Decoder[${caseClassConfig.symbol}] = decoder
+                       
+					override def toJsonObject(obj: ${caseClassConfig.symbol}): (JsonObject, String) = {                          
+                        (implicitDerivedEncoder.encodeObject(obj).asJsonObject,${caseClassConfig.jsonAdtType})
+	                }
+	
+			        override def fromJsonObject(jsonTypeFieldValue : String, cursor: ACursor) : Decoder.Result[${caseClassConfig.symbol}] = {
+                        implicit val decoder = implicitDerivedDecoder
+                        
+                        if(jsonTypeFieldValue != ${caseClassConfig.jsonAdtType}) {
+                            Left(DecodingFailure(s"Unknown json type received: '$$jsonTypeFieldValue'.", cursor.history))
+                        }
+                        else {
+                            cursor.as[${caseClassConfig.symbol}]
+                        }
+	                }
+				}
+			 """
+          )
+          // format: on
     }
 
     def createConverterExpr( traitSymbol: Symbol, caseClassesConfig: Iterable[JsonAdtConfig] ) = {
@@ -106,11 +141,19 @@ object JsonTaggedAdtCodecImpl {
     if (baseSymbol.isClass) {
       val baseSymbolClass = c.symbolOf[T].asClass
       val subclasses: Set[c.universe.Symbol] = baseSymbolClass.knownDirectSubclasses
-      val subclassesMap = subclasses.toList.map( readClassJsonAdt ).groupBy( _.jsonAdtType )
 
       if (subclasses.isEmpty) {
-        c.abort( baseSymbol.pos, s"${baseSymbol} defines no sub classes" )
-      } else
+        if (baseSymbol.asClass.isCaseClass) {
+          createSingleClassConverterExpr( readClassJsonAdt( baseSymbol ) )
+        } else {
+          c.abort(
+            baseSymbol.pos,
+            s"${baseSymbol} defines neither no sub classes nor its defined as a case class itself"
+          )
+        }
+      } else {
+        val subclassesMap = subclasses.toList.map( readClassJsonAdt ).groupBy( _.jsonAdtType )
+
         subclassesMap.find( _._2.length > 1 ) match {
           case Some( duplicate ) =>
             c.abort(
@@ -120,6 +163,7 @@ object JsonTaggedAdtCodecImpl {
           case _ =>
             createConverterExpr( baseSymbol, subclassesMap.flatMap( _._2.headOption ) )
         }
+      }
 
     } else {
       c.abort( c.enclosingPosition, s"${baseSymbol.fullName} must be a trait or base class" )

@@ -42,4 +42,5 @@ trait JsonTaggedAdtConverter[T] {
       jsonTypeFieldValue: String,
       cursor: ACursor
   ): Decoder.Result[T]
+
 }
