@@ -150,7 +150,7 @@ trait MyChildrenTrait extends MyTrait // trait inheritance
 case class MyChildCaseClass() extends MyChildrenTrait
 
 // including tagging through 
-// and duplicate checking for the whole hierarchy at compiler level
+// and duplicate checking for the whole hierarchy (at compiling time)
 @JsonAdt("my-some-tag") 
 case class MyOtherChildCaseClass() extends MyChildrenTrait
 
