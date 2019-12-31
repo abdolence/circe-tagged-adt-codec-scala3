@@ -73,6 +73,7 @@ object TestModels {
   @JsonAdt( "test-case-object" )
   case object BaseTestEventCaseObject extends BaseTestEvent
 
+  @JsonAdtPassThrough
   sealed trait ChildTestEvent extends BaseTestEvent
 
   @JsonAdt( "child-case-class" )
@@ -81,6 +82,7 @@ object TestModels {
   @JsonAdt( "child-case-object" )
   case object ChildTestEventCaseObject extends ChildTestEvent
 
+  @JsonAdtPassThrough
   sealed trait SecondChildTestEvent extends BaseTestEvent
 
   @JsonAdt( "second-child-case-class" )
@@ -88,6 +90,32 @@ object TestModels {
 
   @JsonAdt( "second-child-case-object" )
   case object SecondChildTestEventCaseObject extends ChildTestEvent
+
+  sealed trait NoPassThroughChildTestEvent extends BaseTestEvent
+
+  @JsonAdt( "second-child-case-class" )
+  case class NoPassThroughTestEventCaseClass() extends NoPassThroughChildTestEvent
+
+  @JsonAdt( "second-child-case-object" )
+  case object NoPassThroughTestEventCaseObject extends NoPassThroughChildTestEvent
+
+  @JsonAdt( "isolated-child-case-class" )
+  sealed trait IsolatedChildTestEvent extends BaseTestEvent
+
+  @JsonAdt( "child-case-class" )
+  case class IsolatedChildTestEventCaseClass() extends IsolatedChildTestEvent
+
+  @JsonAdt( "child-case-object" )
+  case object IsolatedChildTestEventCaseObject extends IsolatedChildTestEvent
+
+  @JsonAdtPassThrough()
+  @JsonAdt( "dup-tag2" )
+  sealed trait InvalidMixedTagTestEvent
+  case class ChildInvalidMixedInheritanceTagTestEvent() extends InvalidMixedTagTestEvent
+
+  @JsonAdtPassThrough
+  case class InvalidPassThroughCaseClass()
+
 }
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
@@ -214,6 +242,11 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
     implicit val childDecoder: Decoder[ChildTestEvent] =
       JsonTaggedAdtCodec.createDecoder[ChildTestEvent]( "type" )
 
+    implicit val isolatedEncoder: Encoder[IsolatedChildTestEvent] =
+      JsonTaggedAdtCodec.createEncoder[IsolatedChildTestEvent]( "type" )
+    implicit val isolatedDecoder: Decoder[IsolatedChildTestEvent] =
+      JsonTaggedAdtCodec.createDecoder[IsolatedChildTestEvent]( "type" )
+
     implicit val baseEncoder: Encoder[BaseTestEvent] =
       JsonTaggedAdtCodec.createEncoder[BaseTestEvent]( "type" )
     implicit val baseDecoder: Decoder[BaseTestEvent] =
@@ -223,6 +256,9 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
     val baseTestEvent: BaseTestEvent = BaseTestEventCaseObject
     val childTestJson: String = childTestEvent.asJson.dropNullValues.noSpaces
     val baseTestJson: String = baseTestEvent.asJson.dropNullValues.noSpaces
+
+    val isolatedTestEvent: IsolatedChildTestEvent = IsolatedChildTestEventCaseClass()
+    val isolatedTestJson: String = isolatedTestEvent.asJson.dropNullValues.noSpaces
 
     decode[ChildTestEvent](
       childTestJson
@@ -260,6 +296,15 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
       case Left( ex ) => assert( ex.isInstanceOf[DecodingFailure] )
     }
 
+    decode[IsolatedChildTestEvent](
+      isolatedTestJson
+    ) match {
+      case Right( model ) => {
+        assert( model === isolatedTestEvent )
+      }
+      case Left( ex ) => fail( ex )
+    }
+
   }
 
   it should "be able to detect duplicate tags at compile time" in {
@@ -278,10 +323,28 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
     )
   }
 
-  it should "be able to detect multiple annotations at compile time" in {
+  it should "be able to detect multiple JSonAdt annotations at compile time" in {
     assertDoesNotCompile(
       """
 	  | implicit val encoder : Encoder[InvalidMultiTagTestEvent] = JsonTaggedAdtCodec.createEncoder[InvalidMultiTagTestEvent]("type")
+	  |""".stripMargin
+    )
+  }
+
+  it should "be able to detect mixed JSonAdt/JsonAdtPassThrough annotations at compile time" in {
+
+    assertDoesNotCompile(
+      """
+	  | implicit val encoder : Encoder[InvalidMixedTagTestEvent] = JsonTaggedAdtCodec.createEncoder[InvalidMixedTagTestEvent]("type")
+	  |""".stripMargin
+    )
+  }
+
+  it should "be able to detect incorrect JsonAdtPassThrough on anything but trait at compile time" in {
+
+    assertDoesNotCompile(
+      """
+	  | implicit val encoder : Encoder[InvalidPassThroughCaseClass] = JsonTaggedAdtCodec.createEncoder[InvalidPassThroughCaseClass]("type")
 	  |""".stripMargin
     )
   }

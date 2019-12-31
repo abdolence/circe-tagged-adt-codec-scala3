@@ -38,13 +38,13 @@ The main objectives here are:
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.5.0"
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.5.1"
 ```
 
 or if you need Scala.js support:
 
 ```scala
-libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.5.0"
+libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.5.1"
 ```
 
 ### Usage
@@ -137,34 +137,36 @@ implicit val decoder: Decoder[TestEvent] =
         }
 ```
 
-### Complex ADT definition examples
+### Complex ADT definitions and trait inheritance
 
 All the following examples are support for this codec:
 ```scala
 
-trait MyTrait
+sealed trait MyTrait
 case class MyCaseClass() extends MyTrait
-case object MyCaseObject extends MyTrait // case objects
+// case objects
+case object MyCaseObject extends MyTrait 
 
-trait MyChildrenTrait extends MyTrait // trait inheritance
-case class MyChildCaseClass() extends MyChildrenTrait
+// trait inheritance with passing through tags - 
+// so, direct children of MyTrait and 
+// direct children of MyChildTrait now
+// share the same tags namespace 
+@JsonAdtPassThrough
+sealed trait MyChildTrait extends MyTrait 
+case class MyChildCaseClass() extends MyChildTrait
+case class MyOtherChildCaseClass() extends MyChildTrait
 
-// including tagging through 
-// and duplicate checking for the whole hierarchy (at compiling time)
-@JsonAdt("my-some-tag") 
-case class MyOtherChildCaseClass() extends MyChildrenTrait
+// Now this is has its own decoder/encoder 
+// and the children of MyIsolatedChildTrait have their own tags
+sealed trait MyIsolatedChildTrait extends MyTrait 
+case class MyIsolatedCaseClass() extends MyIsolatedChildTrait
+case class MyIsolatedOtherChildCaseClass() extends MyIsolatedChildTrait
+
+// The same like previous, but you can with a user defined tag on a trait 
+@JsonAdt("isolated-trait-2")
+sealed trait MySecondIsolatedChildTrait extends MyTrait 
 
 
-// You can define a separate encoder/decoder for child traits
-implicit val childrenEncoder : Encoder[MyChildrenTrait] = 
-    JsonTaggedAdtCodec.createEncoder[MyChildrenTrait]("type")
-implicit val childrenDecoder : Decoder[MyChildrenTrait] = 
-    JsonTaggedAdtCodec.createDecoder[MyChildrenTrait]("type")
-
-implicit val parentEncoder : Encoder[MyTrait] = 
-    JsonTaggedAdtCodec.createEncoder[MyTrait]("type")
-implicit val parentDecoder : Decoder[MyTrait] = 
-    JsonTaggedAdtCodec.createDecoder[MyTrait]("type")   
 
 ```
 

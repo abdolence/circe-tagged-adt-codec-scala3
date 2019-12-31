@@ -16,7 +16,7 @@
 
 package org.latestbit.circe.adt.codec.macros.impl
 
-import org.latestbit.circe.adt.codec.{ JsonAdt, JsonTaggedAdtConverter }
+import org.latestbit.circe.adt.codec.{ JsonAdt, JsonAdtPassThrough, JsonTaggedAdtConverter }
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
@@ -33,31 +33,66 @@ object JsonTaggedAdtCodecImpl {
 
     // Scala v2.13.1 compiler has a warning bug for this (https://github.com/scala/scala/pull/8609)
     // Should be fixed in v2.13.2
-    case class JsonAdtConfig( jsonAdtType: String, symbol: Symbol ) {
+    case class JsonAdtConfig(
+        jsonAdtType: String,
+        symbol: Symbol,
+        isUserSpecified: Boolean,
+        hasPassThroughIndicator: Boolean
+    ) {
       def hasDataToEncode(): Boolean = !symbol.asClass.isModuleClass
-      def hasOwnChildren(): Boolean = symbol.asClass.isTrait
+      def isSuitable() = symbol.isClass
+      def isIsolated(): Boolean = symbol.asClass.isTrait && !hasPassThroughIndicator
     }
 
     def isJsonAdtAnnotation( annotation: Annotation ) = {
       annotation.tree.tpe =:= typeOf[JsonAdt]
     }
 
+    def isJsonAdtPassThroughAnnotation( annotation: Annotation ) = {
+      annotation.tree.tpe =:= typeOf[JsonAdtPassThrough]
+    }
+
+    def hasPassThroughAnnotation( symbol: Symbol ): Boolean = {
+      symbol.asClass.annotations.exists( isJsonAdtPassThroughAnnotation )
+    }
+
     def readClassJsonAdt( symbol: Symbol ): JsonAdtConfig = {
 
       val symAnnotations = symbol.asClass.annotations.filter( isJsonAdtAnnotation )
+      val hasPassThroughAnnotationDefined = hasPassThroughAnnotation( symbol )
 
       if (symAnnotations.size > 1) {
         c.abort( symbol.pos, s"Only one @JsonAdt is allowed for ${symbol.fullName}" )
+      } else if (symAnnotations.nonEmpty && hasPassThroughAnnotationDefined) {
+        c.abort(
+          symbol.pos,
+          s"You can't mix @JsonAdt and @JsonAdtPassThrough for ${symbol.fullName}"
+        )
+      } else if (hasPassThroughAnnotationDefined && !symbol.asClass.isTrait) {
+        c.abort(
+          symbol.pos,
+          s"You can't use @JsonAdtPassThrough on anything but trait: ${symbol.fullName}"
+        )
       } else {
         symAnnotations.headOption
           .flatMap { headAnnotation =>
             headAnnotation.tree.children.tail.collectFirst {
               case Literal( Constant( jsonAdtType: String ) ) =>
-                JsonAdtConfig( jsonAdtType, symbol )
+                JsonAdtConfig(
+                  jsonAdtType,
+                  symbol,
+                  isUserSpecified = true,
+                  hasPassThroughIndicator = hasPassThroughAnnotationDefined
+                )
             }
           }
           .getOrElse(
-            JsonAdtConfig( symbol.name.decodedName.toString, symbol )
+            JsonAdtConfig(
+              symbol.name.decodedName.toString,
+              symbol,
+              isUserSpecified = false,
+              hasPassThroughIndicator = hasPassThroughAnnotationDefined
+            )
           )
       }
     }
@@ -109,7 +144,6 @@ object JsonTaggedAdtCodecImpl {
 	
 						obj match {
 	                        case ..${caseClassesConfig.
-                                    filterNot(_.hasOwnChildren()).
                                     map { jsonAdtConfig =>
                                     if(jsonAdtConfig.hasDataToEncode()) {
                                         cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
@@ -125,7 +159,6 @@ object JsonTaggedAdtCodecImpl {
 	
 			            jsonTypeFieldValue match {
 	                        case ..${caseClassesConfig.
-                                    filterNot(_.hasOwnChildren()).
                                     map { jsonAdtConfig =>
                                         cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
                                     }.toList :+
@@ -141,13 +174,19 @@ object JsonTaggedAdtCodecImpl {
 	    // format: on
     }
 
-    def getAllSubclasses( symbol: c.universe.Symbol ): Set[c.universe.Symbol] = {
+    def getAllSubclasses(
+        symbol: c.universe.Symbol
+    ): Set[c.universe.Symbol] = {
       if (symbol.isClass && symbol.asClass.isTrait) {
         val directSubclasses: Set[c.universe.Symbol] = symbol.asClass.knownDirectSubclasses
         directSubclasses.foldLeft( Set[c.universe.Symbol]() ) {
           case ( all, subclass ) =>
             if (subclass.isClass) {
-              (all + subclass) ++ getAllSubclasses( subclass )
+              if (subclass.asClass.isTrait && hasPassThroughAnnotation( subclass )) {
+                all ++ getAllSubclasses( subclass )
+              } else {
+                all + subclass
+              }
             } else
               all
         }
@@ -156,11 +195,8 @@ object JsonTaggedAdtCodecImpl {
     }
 
     val baseSymbol = c.symbolOf[T]
-
-    if (baseSymbol.isClass) {
-      val baseSymbolClass = c.symbolOf[T].asClass
-
-      val subclasses = getAllSubclasses( baseSymbolClass )
+    if (readClassJsonAdt( baseSymbol ).isSuitable()) {
+      val subclasses = getAllSubclasses( baseSymbol )
 
       if (subclasses.isEmpty) {
         if (baseSymbol.asClass.isCaseClass) {
@@ -173,7 +209,10 @@ object JsonTaggedAdtCodecImpl {
         }
       } else {
         val subclassesMap =
-          subclasses.toList.map( readClassJsonAdt ).groupBy( _.jsonAdtType )
+          subclasses.toList
+            .map( readClassJsonAdt )
+            .filter( _.isSuitable() )
+            .groupBy( _.jsonAdtType )
 
         subclassesMap.find( _._2.length > 1 ) match {
           case Some( duplicate ) =>
