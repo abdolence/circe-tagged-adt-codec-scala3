@@ -64,6 +64,30 @@ object TestModels {
 
   sealed trait EmptyCaseClassParentTestEvent
   case class EmptyCaseClassTestEvent() extends EmptyCaseClassParentTestEvent
+
+  sealed trait BaseTestEvent
+
+  @JsonAdt( "test-case-class" )
+  case class BaseTestEventCaseClass() extends BaseTestEvent
+
+  @JsonAdt( "test-case-object" )
+  case object BaseTestEventCaseObject extends BaseTestEvent
+
+  sealed trait ChildTestEvent extends BaseTestEvent
+
+  @JsonAdt( "child-case-class" )
+  case class ChildTestEventCaseClass() extends ChildTestEvent
+
+  @JsonAdt( "child-case-object" )
+  case object ChildTestEventCaseObject extends ChildTestEvent
+
+  sealed trait SecondChildTestEvent extends BaseTestEvent
+
+  @JsonAdt( "second-child-case-class" )
+  case class SecondChildTestEventCaseClass() extends ChildTestEvent
+
+  @JsonAdt( "second-child-case-object" )
+  case object SecondChildTestEventCaseObject extends ChildTestEvent
 }
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
@@ -180,6 +204,60 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
     ) match {
       case Right( model ) => assert( model === testEvent )
       case Left( ex )     => fail( ex )
+    }
+
+  }
+
+  it should "able to serialise and deserialise correctly traits inheritance" in {
+    implicit val childEncoder: Encoder[ChildTestEvent] =
+      JsonTaggedAdtCodec.createEncoder[ChildTestEvent]( "type" )
+    implicit val childDecoder: Decoder[ChildTestEvent] =
+      JsonTaggedAdtCodec.createDecoder[ChildTestEvent]( "type" )
+
+    implicit val baseEncoder: Encoder[BaseTestEvent] =
+      JsonTaggedAdtCodec.createEncoder[BaseTestEvent]( "type" )
+    implicit val baseDecoder: Decoder[BaseTestEvent] =
+      JsonTaggedAdtCodec.createDecoder[BaseTestEvent]( "type" )
+
+    val childTestEvent: ChildTestEvent = ChildTestEventCaseClass()
+    val baseTestEvent: BaseTestEvent = BaseTestEventCaseObject
+    val childTestJson: String = childTestEvent.asJson.dropNullValues.noSpaces
+    val baseTestJson: String = baseTestEvent.asJson.dropNullValues.noSpaces
+
+    decode[ChildTestEvent](
+      childTestJson
+    ) match {
+      case Right( model ) => {
+        assert( model === childTestEvent )
+      }
+      case Left( ex ) => fail( ex )
+    }
+
+    decode[BaseTestEvent](
+      childTestJson
+    ) match {
+      case Right( model ) => {
+        assert( model === childTestEvent )
+      }
+      case Left( ex ) => fail( ex )
+    }
+
+    decode[BaseTestEvent](
+      baseTestJson
+    ) match {
+      case Right( model ) => {
+        assert( model === baseTestEvent )
+      }
+      case Left( ex ) => fail( ex )
+    }
+
+    decode[ChildTestEvent](
+      baseTestJson
+    ) match {
+      case Right( model ) => {
+        fail( model.toString )
+      }
+      case Left( ex ) => assert( ex.isInstanceOf[DecodingFailure] )
     }
 
   }

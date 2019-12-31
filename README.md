@@ -38,13 +38,13 @@ The main objectives here are:
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.4.1"
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.5.0"
 ```
 
 or if you need Scala.js support:
 
 ```scala
-libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.4.1"
+libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.5.0"
 ```
 
 ### Usage
@@ -135,6 +135,29 @@ implicit val decoder: Decoder[TestEvent] =
                     Decoder.failedWithMessage(s"'type' isn't specified in json.")(cursor)
             }
         }
+```
+
+### Complex ADT definition examples
+
+All the following examples are support for this codec:
+```scala
+
+trait MyTrait
+case class MyCaseClass() extends MyTrait
+case object MyCaseObject extends MyTrait // case objects
+
+trait MyChildrenTrait extends MyTrait // trait inheritance
+case class MyChildCaseClass() extends MyChildrenTrait
+
+@JsonAdt("my-some-tag") // including tagging through and duplicate checking for the whole hierarchy at compiler level
+case class MyOtherChildCaseClass() extends MyChildrenTrait
+
+implicit val childrenEncoder : Encoder[MyChildrenTrait] = JsonTaggedAdtCodec.createEncoder[MyChildrenTrait]("type")
+implicit val childrenDecoder : Decoder[MyChildrenTrait] = JsonTaggedAdtCodec.createDecoder[MyChildrenTrait]("type")
+
+implicit val parentEncoder : Encoder[MyTrait] = JsonTaggedAdtCodec.createEncoder[MyTrait]("type")
+implicit val parentDecoder : Decoder[MyTrait] = JsonTaggedAdtCodec.createDecoder[MyTrait]("type")
+
 ```
 
 ### Licence

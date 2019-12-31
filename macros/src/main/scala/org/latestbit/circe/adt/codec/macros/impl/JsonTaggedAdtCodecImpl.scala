@@ -35,6 +35,7 @@ object JsonTaggedAdtCodecImpl {
     // Should be fixed in v2.13.2
     case class JsonAdtConfig( jsonAdtType: String, symbol: Symbol ) {
       def hasDataToEncode(): Boolean = !symbol.asClass.isModuleClass
+      def hasOwnChildren(): Boolean = symbol.asClass.isTrait
     }
 
     def isJsonAdtAnnotation( annotation: Annotation ) = {
@@ -107,13 +108,15 @@ object JsonTaggedAdtCodecImpl {
 					override def toJsonObject(obj: ${traitSymbol}): (JsonObject, String) = {
 	
 						obj match {
-	                        case ..${caseClassesConfig.map { jsonAdtConfig =>
-								if(jsonAdtConfig.hasDataToEncode()) {
-									cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
-								}
-								else {
-									cq"ev : ${jsonAdtConfig.symbol} => (JsonObject(),${jsonAdtConfig.jsonAdtType}) "
-								}
+	                        case ..${caseClassesConfig.
+                                    filterNot(_.hasOwnChildren()).
+                                    map { jsonAdtConfig =>
+                                    if(jsonAdtConfig.hasDataToEncode()) {
+                                        cq"ev : ${jsonAdtConfig.symbol} => (ev.asJsonObject,${jsonAdtConfig.jsonAdtType}) "
+                                    }
+                                    else {
+                                        cq"ev : ${jsonAdtConfig.symbol} => (JsonObject(),${jsonAdtConfig.jsonAdtType}) "
+                                    }
 							}}
 	                    }
 	                }
@@ -122,12 +125,13 @@ object JsonTaggedAdtCodecImpl {
 	
 			            jsonTypeFieldValue match {
 	                        case ..${caseClassesConfig.
-								map { jsonAdtConfig =>
-									cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
-								}.toList :+
-									cq"""_ =>
-		                                Left(DecodingFailure(s"Unknown json type received: '$$jsonTypeFieldValue'.", cursor.history))
-									"""
+                                    filterNot(_.hasOwnChildren()).
+                                    map { jsonAdtConfig =>
+                                        cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
+                                    }.toList :+
+                                        cq"""_ =>
+                                            Left(DecodingFailure(s"Unknown json type received: '$$jsonTypeFieldValue'.", cursor.history))
+                                        """
 							}
 	                    }
 	                }
@@ -137,11 +141,26 @@ object JsonTaggedAdtCodecImpl {
 	    // format: on
     }
 
+    def getAllSubclasses( symbol: c.universe.Symbol ): Set[c.universe.Symbol] = {
+      if (symbol.isClass && symbol.asClass.isTrait) {
+        val directSubclasses: Set[c.universe.Symbol] = symbol.asClass.knownDirectSubclasses
+        directSubclasses.foldLeft( Set[c.universe.Symbol]() ) {
+          case ( all, subclass ) =>
+            if (subclass.isClass) {
+              (all + subclass) ++ getAllSubclasses( subclass )
+            } else
+              all
+        }
+      } else
+        Set()
+    }
+
     val baseSymbol = c.symbolOf[T]
 
     if (baseSymbol.isClass) {
       val baseSymbolClass = c.symbolOf[T].asClass
-      val subclasses: Set[c.universe.Symbol] = baseSymbolClass.knownDirectSubclasses
+
+      val subclasses = getAllSubclasses( baseSymbolClass )
 
       if (subclasses.isEmpty) {
         if (baseSymbol.asClass.isCaseClass) {
@@ -153,13 +172,14 @@ object JsonTaggedAdtCodecImpl {
           )
         }
       } else {
-        val subclassesMap = subclasses.toList.map( readClassJsonAdt ).groupBy( _.jsonAdtType )
+        val subclassesMap =
+          subclasses.toList.map( readClassJsonAdt ).groupBy( _.jsonAdtType )
 
         subclassesMap.find( _._2.length > 1 ) match {
           case Some( duplicate ) =>
             c.abort(
               duplicate._2.head.symbol.pos,
-              s"${duplicate._2.map( _.symbol.fullName ).mkString( ", " )} defined duplicate json type"
+              s"${duplicate._2.map( _.symbol.fullName ).mkString( ", " )} defined a duplicate json type: '${duplicate._1}''"
             )
           case _ =>
             createConverterExpr( baseSymbol, subclassesMap.flatMap( _._2.headOption ) )
@@ -167,7 +187,7 @@ object JsonTaggedAdtCodecImpl {
       }
 
     } else {
-      c.abort( c.enclosingPosition, s"${baseSymbol.fullName} must be a trait or base class" )
+      c.abort( c.enclosingPosition, s"${baseSymbol.fullName} must be a trait or a case class" )
     }
   }
 }
