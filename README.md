@@ -162,7 +162,7 @@ sealed trait MyIsolatedChildTrait extends MyTrait
 case class MyIsolatedCaseClass() extends MyIsolatedChildTrait
 case class MyIsolatedOtherChildCaseClass() extends MyIsolatedChildTrait
 
-// The same like previous, but you can with a user defined tag on a trait 
+// The same like previous, but you can define your own tag on a child trait 
 @JsonAdt("isolated-trait-2")
 sealed trait MySecondIsolatedChildTrait extends MyTrait 
 
