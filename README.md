@@ -154,6 +154,8 @@ case class MyChildCaseClass() extends MyChildrenTrait
 @JsonAdt("my-some-tag") 
 case class MyOtherChildCaseClass() extends MyChildrenTrait
 
+
+// You can define a separate encoder/decoder for child traits
 implicit val childrenEncoder : Encoder[MyChildrenTrait] = 
     JsonTaggedAdtCodec.createEncoder[MyChildrenTrait]("type")
 implicit val childrenDecoder : Decoder[MyChildrenTrait] = 
