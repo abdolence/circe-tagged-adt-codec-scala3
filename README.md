@@ -149,14 +149,20 @@ case object MyCaseObject extends MyTrait // case objects
 trait MyChildrenTrait extends MyTrait // trait inheritance
 case class MyChildCaseClass() extends MyChildrenTrait
 
-@JsonAdt("my-some-tag") // including tagging through and duplicate checking for the whole hierarchy at compiler level
+// including tagging through 
+// and duplicate checking for the whole hierarchy at compiler level
+@JsonAdt("my-some-tag") 
 case class MyOtherChildCaseClass() extends MyChildrenTrait
 
-implicit val childrenEncoder : Encoder[MyChildrenTrait] = JsonTaggedAdtCodec.createEncoder[MyChildrenTrait]("type")
-implicit val childrenDecoder : Decoder[MyChildrenTrait] = JsonTaggedAdtCodec.createDecoder[MyChildrenTrait]("type")
+implicit val childrenEncoder : Encoder[MyChildrenTrait] = 
+    JsonTaggedAdtCodec.createEncoder[MyChildrenTrait]("type")
+implicit val childrenDecoder : Decoder[MyChildrenTrait] = 
+    JsonTaggedAdtCodec.createDecoder[MyChildrenTrait]("type")
 
-implicit val parentEncoder : Encoder[MyTrait] = JsonTaggedAdtCodec.createEncoder[MyTrait]("type")
-implicit val parentDecoder : Decoder[MyTrait] = JsonTaggedAdtCodec.createDecoder[MyTrait]("type")
+implicit val parentEncoder : Encoder[MyTrait] = 
+    JsonTaggedAdtCodec.createEncoder[MyTrait]("type")
+implicit val parentDecoder : Decoder[MyTrait] = 
+    JsonTaggedAdtCodec.createDecoder[MyTrait]("type")   
 
 ```
 
