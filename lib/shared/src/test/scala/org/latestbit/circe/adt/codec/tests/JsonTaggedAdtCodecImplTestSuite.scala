@@ -250,17 +250,39 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "able to serialise and deserialise correctly when specified on a single case class for semiauto mode" in {
-    implicit val encoder: Encoder.AsObject[NotAnnotatedTestEvent1] =
+    import io.circe.generic.semiauto._
+
+    implicit val encoderEv1: Encoder.AsObject[NotAnnotatedTestEvent1] =
       JsonTaggedAdtCodec.createEncoder[NotAnnotatedTestEvent1]( "type" )
-    implicit val decoder: Decoder[NotAnnotatedTestEvent1] =
+    implicit val decoderEv1: Decoder[NotAnnotatedTestEvent1] =
       JsonTaggedAdtCodec.createDecoder[NotAnnotatedTestEvent1]( "type" )
+
+    implicit val implicitEncoderEv2: Encoder.AsObject[NotAnnotatedTestEvent2] =
+      deriveEncoder[NotAnnotatedTestEvent2]
+    implicit val implicitDecoderEv2: Decoder[NotAnnotatedTestEvent2] =
+      deriveDecoder[NotAnnotatedTestEvent2]
+
+    implicit val encoderTrait: Encoder.AsObject[NotAnnotatedTestEvent] =
+      JsonTaggedAdtCodec.createEncoder[NotAnnotatedTestEvent]( "type" )
+    implicit val decoderTrait: Decoder[NotAnnotatedTestEvent] =
+      JsonTaggedAdtCodec.createDecoder[NotAnnotatedTestEvent]( "type" )
 
     val testEvent: NotAnnotatedTestEvent1 = NotAnnotatedTestEvent1( "test" )
     val testJson: String = testEvent.asJson.dropNullValues.noSpaces
+    val testTrait: NotAnnotatedTestEvent = testEvent
+    val testTraitJson: String = testTrait.asJson.dropNullValues.noSpaces
 
     assert( testJson.contains( """"type"""" ) )
+    assert( testJson === testTraitJson )
 
     decode[NotAnnotatedTestEvent1](
+      testJson
+    ) match {
+      case Right( model ) => assert( model === testEvent )
+      case Left( ex )     => fail( ex )
+    }
+
+    decode[NotAnnotatedTestEvent](
       testJson
     ) match {
       case Right( model ) => assert( model === testEvent )

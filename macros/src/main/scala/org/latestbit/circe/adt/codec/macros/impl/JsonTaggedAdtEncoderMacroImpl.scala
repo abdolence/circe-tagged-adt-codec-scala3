@@ -42,7 +42,7 @@ object JsonTaggedAdtEncoderMacroImpl extends JsonTaggedAdtMacroBase {
                     import io.circe.generic.semiauto._
                        
 					override def toJsonObject(obj: ${caseClassConfig.symbol}): (JsonObject, String) = {
-                        implicit val encoder = deriveEncoder[${caseClassConfig.symbol}]
+                        val encoder = deriveEncoder[${caseClassConfig.symbol}]
                         (encoder.encodeObject(obj),${caseClassConfig.jsonAdtType})
 	                }
 
