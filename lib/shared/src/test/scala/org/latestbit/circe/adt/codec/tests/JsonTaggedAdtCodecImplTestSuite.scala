@@ -19,7 +19,6 @@ package org.latestbit.circe.adt.codec.tests
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
-import io.circe.generic.auto._
 import org.latestbit.circe.adt.codec._
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -122,6 +121,8 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   import TestModels._
 
   "A codec" should "be able to serialise case classes correctly" in {
+    import io.circe.generic.auto._
+
     implicit val encoder: Encoder[TestEvent] =
       JsonTaggedAdtCodec.createEncoder[TestEvent]( "type" )
 
@@ -132,6 +133,8 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "be able to deserialise case classes" in {
+    import io.circe.generic.auto._
+
     implicit val decoder: Decoder[TestEvent] =
       JsonTaggedAdtCodec.createDecoder[TestEvent]( "type" )
 
@@ -147,6 +150,8 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "check for unknown or absent type field in json in decoder" in {
+    import io.circe.generic.auto._
+
     implicit val decoder: Decoder[TestEvent] =
       JsonTaggedAdtCodec.createDecoder[TestEvent]( "type" )
 
@@ -165,6 +170,8 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "able to serialise and deserialise unannotated case classes" in {
+    import io.circe.generic.auto._
+
     implicit val encoder: Encoder[NotAnnotatedTestEvent] =
       JsonTaggedAdtCodec.createEncoder[NotAnnotatedTestEvent]( "type" )
     implicit val decoder: Decoder[NotAnnotatedTestEvent] =
@@ -183,6 +190,8 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "be able to encode/decode inner case classes and objects" in {
+    import io.circe.generic.auto._
+
     implicit val encoder: Encoder[InnerSubclassesTestEvent] =
       JsonTaggedAdtCodec.createEncoder[InnerSubclassesTestEvent]( "type" )
     implicit val decoder: Decoder[InnerSubclassesTestEvent] =
@@ -201,6 +210,8 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "be able to encode/decode empty case classes" in {
+    import io.circe.generic.auto._
+
     implicit val encoder: Encoder[EmptyCaseClassParentTestEvent] =
       JsonTaggedAdtCodec.createEncoder[EmptyCaseClassParentTestEvent]( "type" )
     implicit val decoder: Decoder[EmptyCaseClassParentTestEvent] =
@@ -219,6 +230,8 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "able to serialise and deserialise correctly when specified on a single case class" in {
+    import io.circe.generic.auto._
+
     implicit val encoder: Encoder[NotAnnotatedTestEvent1] =
       JsonTaggedAdtCodec.createEncoder[NotAnnotatedTestEvent1]( "type" )
     implicit val decoder: Decoder[NotAnnotatedTestEvent1] =
@@ -237,6 +250,8 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "able to serialise and deserialise correctly traits inheritance" in {
+    import io.circe.generic.auto._
+
     implicit val childEncoder: Encoder[ChildTestEvent] =
       JsonTaggedAdtCodec.createEncoder[ChildTestEvent]( "type" )
     implicit val childDecoder: Decoder[ChildTestEvent] =
@@ -310,6 +325,8 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   it should "be able to detect duplicate tags at compile time" in {
     assertDoesNotCompile(
       """
+      | import io.circe.generic.auto._
+      |
       | implicit val encoder : Encoder[DupTagTestEvent] = JsonTaggedAdtCodec.createEncoder[DupTagTestEvent]("type")
       |""".stripMargin
     )
@@ -318,6 +335,7 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   it should "be able to detect empty sealed traits at compile time" in {
     assertDoesNotCompile(
       """
+	  | import io.circe.generic.auto._
 	  | implicit val encoder : Encoder[EmptyTestEvent] = JsonTaggedAdtCodec.createEncoder[EmptyTestEvent]("type")
 	  |""".stripMargin
     )
@@ -326,7 +344,9 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   it should "be able to detect multiple JSonAdt annotations at compile time" in {
     assertDoesNotCompile(
       """
-	  | implicit val encoder : Encoder[InvalidMultiTagTestEvent] = JsonTaggedAdtCodec.createEncoder[InvalidMultiTagTestEvent]("type")
+      | import io.circe.generic.auto._
+      |
+      | implicit val encoder : Encoder[InvalidMultiTagTestEvent] = JsonTaggedAdtCodec.createEncoder[InvalidMultiTagTestEvent]("type")
 	  |""".stripMargin
     )
   }
@@ -335,7 +355,9 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
     assertDoesNotCompile(
       """
-	  | implicit val encoder : Encoder[InvalidMixedTagTestEvent] = JsonTaggedAdtCodec.createEncoder[InvalidMixedTagTestEvent]("type")
+      | import io.circe.generic.auto._
+      |
+      | implicit val encoder : Encoder[InvalidMixedTagTestEvent] = JsonTaggedAdtCodec.createEncoder[InvalidMixedTagTestEvent]("type")
 	  |""".stripMargin
     )
   }
@@ -344,12 +366,15 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
     assertDoesNotCompile(
       """
-	  | implicit val encoder : Encoder[InvalidPassThroughCaseClass] = JsonTaggedAdtCodec.createEncoder[InvalidPassThroughCaseClass]("type")
+      | import io.circe.generic.auto._
+      |
+      |implicit val encoder : Encoder[InvalidPassThroughCaseClass] = JsonTaggedAdtCodec.createEncoder[InvalidPassThroughCaseClass]("type")
 	  |""".stripMargin
     )
   }
 
   it should "be able to configured with custom implementation of encoder" in {
+    import io.circe.generic.auto._
 
     implicit val encoder: Encoder[TestEvent] =
       JsonTaggedAdtCodec.createEncoderDefinition[TestEvent] {
@@ -373,6 +398,7 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "be able to configured with custom implementation of decoder" in {
+    import io.circe.generic.auto._
 
     implicit val decoder: Decoder[TestEvent] =
       JsonTaggedAdtCodec.createDecoderDefinition[TestEvent] {

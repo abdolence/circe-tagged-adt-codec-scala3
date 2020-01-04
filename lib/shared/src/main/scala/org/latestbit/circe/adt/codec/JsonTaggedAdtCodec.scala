@@ -27,15 +27,15 @@ object JsonTaggedAdtCodec {
    * Default implementation of encoding JSON with a type field
    *
    * @param typeFieldName a JSON field name to encode type name
-   * @param converter     converter for trait and its case classes
+   * @param encoder     converter for trait and its case classes
    * @param obj           an object to encode
    * @tparam T A trait type
    * @return Encoded json object with a type field
    */
   protected def defaultJsonTypeFieldEncoder[T](
       typeFieldName: String
-  )( converter: JsonTaggedAdtConverter[T], obj: T ): JsonObject = {
-    val ( jsonObj, typeFieldValue ) = converter.toJsonObject( obj )
+  )( encoder: JsonTaggedAdtEncoder[T], obj: T ): JsonObject = {
+    val ( jsonObj, typeFieldValue ) = encoder.toJsonObject( obj )
     jsonObj.add( typeFieldName, Json.fromString( typeFieldValue ) )
   }
 
@@ -43,7 +43,7 @@ object JsonTaggedAdtCodec {
    * Default implementation of decoding JSON with a type field
    *
    * @param typeFieldName a JSON field name to decode type name
-   * @param converter     converter for trait and its case classes
+   * @param decoder     converter for trait and its case classes
    * @param cursor        JSON context cursor
    * @tparam T A trait type
    * @return Decode result
@@ -51,13 +51,13 @@ object JsonTaggedAdtCodec {
   protected def defaultJsonTypeFieldDecoder[T](
       typeFieldName: String
   )(
-      converter: JsonTaggedAdtConverter[T],
+      decoder: JsonTaggedAdtDecoder[T],
       cursor: HCursor
   ): Decoder.Result[T] = {
 
     cursor.get[Option[String]]( typeFieldName ).flatMap {
       case Some( typeFieldValue ) =>
-        converter.fromJsonObject(
+        decoder.fromJsonObject(
           jsonTypeFieldValue = typeFieldValue,
           cursor = cursor
         )
@@ -77,8 +77,8 @@ object JsonTaggedAdtCodec {
    * @return circe Encoder of T
    */
   def createEncoderDefinition[T](
-      typeFieldEncoder: ( JsonTaggedAdtConverter[T], T ) => JsonObject
-  )( implicit converter: JsonTaggedAdtConverter[T] ): Encoder.AsObject[T] =
+      typeFieldEncoder: ( JsonTaggedAdtEncoder[T], T ) => JsonObject
+  )( implicit converter: JsonTaggedAdtEncoder[T] ): Encoder.AsObject[T] =
     (obj: T) => {
       typeFieldEncoder( converter, obj )
     }
@@ -93,7 +93,7 @@ object JsonTaggedAdtCodec {
    */
   def createEncoder[T](
       typeFieldName: String
-  )( implicit converter: JsonTaggedAdtConverter[T] ): Encoder.AsObject[T] =
+  )( implicit converter: JsonTaggedAdtEncoder[T] ): Encoder.AsObject[T] =
     createEncoderDefinition[T]( defaultJsonTypeFieldEncoder( typeFieldName ) )
 
   /**
@@ -106,10 +106,10 @@ object JsonTaggedAdtCodec {
 	*/
   def createDecoderDefinition[T](
       typeFieldDecoder: (
-          JsonTaggedAdtConverter[T],
+          JsonTaggedAdtDecoder[T],
           HCursor
       ) => Decoder.Result[T]
-  )( implicit converter: JsonTaggedAdtConverter[T] ): Decoder[T] =
+  )( implicit converter: JsonTaggedAdtDecoder[T] ): Decoder[T] =
     (cursor: HCursor) => {
       typeFieldDecoder( converter, cursor )
     }
@@ -124,7 +124,7 @@ object JsonTaggedAdtCodec {
 	*/
   def createDecoder[T](
       typeFieldName: String
-  )( implicit converter: JsonTaggedAdtConverter[T] ): Decoder[T] =
+  )( implicit converter: JsonTaggedAdtDecoder[T] ): Decoder[T] =
     createDecoderDefinition[T]( defaultJsonTypeFieldDecoder( typeFieldName ) )
 
 }
