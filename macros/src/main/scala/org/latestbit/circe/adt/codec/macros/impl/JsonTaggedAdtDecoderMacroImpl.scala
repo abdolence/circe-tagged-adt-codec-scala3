@@ -39,13 +39,10 @@ object JsonTaggedAdtDecoderMacroImpl extends JsonTaggedAdtMacroBase {
               q"""
 			   new JsonTaggedAdtDecoder[${caseClassConfig.symbol}] {
 	                import io.circe.{ JsonObject, Decoder, ACursor, DecodingFailure }
-	
-                    protected def implicitDerivedDecoder(
-                        implicit decoder: Decoder[${caseClassConfig.symbol}]
-                    ): Decoder[${caseClassConfig.symbol}] = decoder
-                       
+                    import io.circe.generic.semiauto._
+	                       
 			        override def fromJsonObject(jsonTypeFieldValue : String, cursor: ACursor) : Decoder.Result[${caseClassConfig.symbol}] = {
-                        implicit val decoder = implicitDerivedDecoder
+                        implicit val decoder = deriveDecoder[${caseClassConfig.symbol}]
                         
                         if(jsonTypeFieldValue != ${caseClassConfig.jsonAdtType}) {
                             Left(DecodingFailure(s"Unknown json type received: '$$jsonTypeFieldValue'.", cursor.history))

@@ -249,6 +249,26 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
   }
 
+  it should "able to serialise and deserialise correctly when specified on a single case class for semiauto mode" in {
+    implicit val encoder: Encoder.AsObject[NotAnnotatedTestEvent1] =
+      JsonTaggedAdtCodec.createEncoder[NotAnnotatedTestEvent1]( "type" )
+    implicit val decoder: Decoder[NotAnnotatedTestEvent1] =
+      JsonTaggedAdtCodec.createDecoder[NotAnnotatedTestEvent1]( "type" )
+
+    val testEvent: NotAnnotatedTestEvent1 = NotAnnotatedTestEvent1( "test" )
+    val testJson: String = testEvent.asJson.dropNullValues.noSpaces
+
+    assert( testJson.contains( """"type"""" ) )
+
+    decode[NotAnnotatedTestEvent1](
+      testJson
+    ) match {
+      case Right( model ) => assert( model === testEvent )
+      case Left( ex )     => fail( ex )
+    }
+
+  }
+
   it should "able to serialise and deserialise correctly traits inheritance" in {
     import io.circe.generic.auto._
 

@@ -17,6 +17,7 @@
 package org.latestbit.circe.adt.codec
 
 import io.circe.{ Decoder, Encoder, HCursor, Json, JsonObject }
+import org.latestbit.circe.adt.codec.impl.UpgradingAdtEncoder
 
 /**
  * Object provides access to the factory methods for circe Encoder/Decoder
@@ -72,28 +73,34 @@ object JsonTaggedAdtCodec {
    * Create ADT / JSON type field base encoder with a specified type field encoding implementation
    *
    * @param typeFieldEncoder JSON type field encoding implementation
-   * @param converter        implicitly created JSON converter for trait and its case classes
+   * @param adtEncoder        implicitly created JSON converter for trait and its case classes
    * @tparam T A trait type
    * @return circe Encoder of T
    */
   def createEncoderDefinition[T](
       typeFieldEncoder: ( JsonTaggedAdtEncoder[T], T ) => JsonObject
-  )( implicit converter: JsonTaggedAdtEncoder[T] ): Encoder.AsObject[T] =
+  )( implicit adtEncoder: JsonTaggedAdtEncoder[T] ): Encoder.AsObject[T] =
     (obj: T) => {
-      typeFieldEncoder( converter, obj )
+      typeFieldEncoder( adtEncoder, obj )
     }
 
   /**
    * Create ADT / JSON type field base encoder
    *
    * @param typeFieldName a JSON field name to encode type name
-   * @param converter     implicitly created JSON converter for trait and its case classes
+   * @param adtEncoder     implicitly created JSON converter for trait and its case classes
    * @tparam T A trait type
    * @return circe Encoder of T
    */
   def createEncoder[T](
       typeFieldName: String
-  )( implicit converter: JsonTaggedAdtEncoder[T] ): Encoder.AsObject[T] =
+  )( implicit adtEncoder: JsonTaggedAdtEncoder[T] ): Encoder.AsObject[T] =
+    createEncoderDefinition[T]( defaultJsonTypeFieldEncoder( typeFieldName ) )
+
+  def upgradeSemiAutoEncoder[T](
+      typeFieldName: String,
+      encoder: Encoder.AsObject[T]
+  )( implicit adtEncoder: JsonTaggedAdtEncoder[T] ): Encoder.AsObject[T] =
     createEncoderDefinition[T]( defaultJsonTypeFieldEncoder( typeFieldName ) )
 
   /**
