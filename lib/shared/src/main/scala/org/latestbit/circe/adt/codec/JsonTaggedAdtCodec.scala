@@ -28,8 +28,8 @@ object JsonTaggedAdtCodec {
    * Default implementation of encoding JSON with a type field
    *
    * @param typeFieldName a JSON field name to encode type name
-   * @param encoder     converter for trait and its case classes
-   * @param obj           an object to encode
+   * @param encoder converter for trait and its case classes
+   * @param obj an object to encode
    * @tparam T A trait type
    * @return Encoded json object with a type field
    */
@@ -44,8 +44,8 @@ object JsonTaggedAdtCodec {
    * Default implementation of decoding JSON with a type field
    *
    * @param typeFieldName a JSON field name to decode type name
-   * @param decoder     converter for trait and its case classes
-   * @param cursor        JSON context cursor
+   * @param decoder converter for trait and its case classes
+   * @param cursor JSON context cursor
    * @tparam T A trait type
    * @return Decode result
    */
@@ -73,7 +73,7 @@ object JsonTaggedAdtCodec {
    * Create ADT / JSON type field base encoder with a specified type field encoding implementation
    *
    * @param typeFieldEncoder JSON type field encoding implementation
-   * @param adtEncoder        implicitly created JSON converter for trait and its case classes
+   * @param adtEncoder implicitly created JSON converter for trait and its case classes
    * @tparam T A trait type
    * @return circe Encoder of T
    */
@@ -88,7 +88,7 @@ object JsonTaggedAdtCodec {
    * Create ADT / JSON type field base encoder
    *
    * @param typeFieldName a JSON field name to encode type name
-   * @param adtEncoder     implicitly created JSON converter for trait and its case classes
+   * @param adtEncoder implicitly created JSON converter for trait and its case classes
    * @tparam T A trait type
    * @return circe Encoder of T
    */
@@ -97,17 +97,11 @@ object JsonTaggedAdtCodec {
   )( implicit adtEncoder: JsonTaggedAdtEncoder[T] ): Encoder.AsObject[T] =
     createEncoderDefinition[T]( defaultJsonTypeFieldEncoder( typeFieldName ) )
 
-  def upgradeSemiAutoEncoder[T](
-      typeFieldName: String,
-      encoder: Encoder.AsObject[T]
-  )( implicit adtEncoder: JsonTaggedAdtEncoder[T] ): Encoder.AsObject[T] =
-    createEncoderDefinition[T]( defaultJsonTypeFieldEncoder( typeFieldName ) )
-
   /**
 	* Create ADT / JSON type field base decoder with a specified type field decoding implementation
 	*
 	* @param typeFieldDecoder JSON type field decoding implementation
-	* @param converter        implicitly created JSON converter for trait and its case classes
+	* @param adtDecoder implicitly created JSON converter for trait and its case classes
 	* @tparam T A trait type
 	* @return circe Decoder of T
 	*/
@@ -116,22 +110,22 @@ object JsonTaggedAdtCodec {
           JsonTaggedAdtDecoder[T],
           HCursor
       ) => Decoder.Result[T]
-  )( implicit converter: JsonTaggedAdtDecoder[T] ): Decoder[T] =
+  )( implicit adtDecoder: JsonTaggedAdtDecoder[T] ): Decoder[T] =
     (cursor: HCursor) => {
-      typeFieldDecoder( converter, cursor )
+      typeFieldDecoder( adtDecoder, cursor )
     }
 
   /**
-	* Create ADT / JSON type field base decoder
-	*
-	* @param typeFieldName a JSON field name to decode type name
-	* @param converter     implicitly created JSON converter for trait and its case classes
-	* @tparam T A trait type
-	* @return circe Decoder of T
-	*/
+   * Create ADT / JSON type field base decoder
+   *
+   * @param typeFieldName a JSON field name to decode type name
+   * @param adtDecoder implicitly created JSON converter for trait and its case classes
+   * @tparam T A trait type
+   * @return circe Decoder of T
+   */
   def createDecoder[T](
       typeFieldName: String
-  )( implicit converter: JsonTaggedAdtDecoder[T] ): Decoder[T] =
+  )( implicit adtDecoder: JsonTaggedAdtDecoder[T] ): Decoder[T] =
     createDecoderDefinition[T]( defaultJsonTypeFieldDecoder( typeFieldName ) )
 
 }
