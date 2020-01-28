@@ -98,13 +98,13 @@ object JsonTaggedAdtCodec {
     createEncoderDefinition[T]( defaultJsonTypeFieldEncoder( typeFieldName ) )
 
   /**
-	* Create ADT / JSON type field base decoder with a specified type field decoding implementation
-	*
-	* @param typeFieldDecoder JSON type field decoding implementation
-	* @param adtDecoder implicitly created JSON converter for trait and its case classes
-	* @tparam T A trait type
-	* @return circe Decoder of T
-	*/
+   * Create ADT / JSON type field base decoder with a specified type field decoding implementation
+   *
+   * @param typeFieldDecoder JSON type field decoding implementation
+   * @param adtDecoder implicitly created JSON converter for trait and its case classes
+   * @tparam T A trait type
+   * @return circe Decoder of T
+   */
   def createDecoderDefinition[T](
       typeFieldDecoder: (
           JsonTaggedAdtDecoder[T],
