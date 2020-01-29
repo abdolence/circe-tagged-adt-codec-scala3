@@ -17,7 +17,6 @@
 package org.latestbit.circe.adt.codec
 
 import io.circe.{ Decoder, Encoder, HCursor, Json, JsonObject }
-import org.latestbit.circe.adt.codec.impl.UpgradingAdtEncoder
 
 /**
  * Object provides access to the factory methods for circe Encoder/Decoder
