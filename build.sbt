@@ -6,7 +6,7 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 name := "circe-tagged-adt-codec-root"
 
-ThisBuild / version := "0.6.3"
+ThisBuild / version := "0.7.0"
 
 ThisBuild / organization := "org.latestbit"
 
@@ -91,7 +91,7 @@ ThisBuild / packageOptions := Seq(
   )
 )
 
-val circeVersion = "0.12.3"
+val circeVersion = "0.13.0"
 val scalaTestVersion = "3.1.0"
 
 val baseJvmDependencies =
