@@ -1,12 +1,11 @@
 import java.time.format.DateTimeFormatter
 import java.time.{ ZoneOffset, ZonedDateTime }
 import sbt.Package.ManifestAttributes
-import sbtcrossproject.CrossType
-import sbtcrossproject.CrossPlugin.autoImport.crossProject
+import sbtcrossproject.{ crossProject, CrossType }
 
 name := "circe-tagged-adt-codec-root"
 
-ThisBuild / version := "0.8.0"
+ThisBuild / version := "0.8.0-SNAPSHOT"
 
 ThisBuild / organization := "org.latestbit"
 
@@ -79,6 +78,11 @@ ThisBuild / javacOptions ++= Seq(
   "-Xlint"
 )
 
+val scalacJsOptions = (CrossVersion.partialVersion( scalaJSVersion ) match {
+  case Some( ( 0, n ) ) if n <= 6 => Seq( "-P:scalajs:sjsDefinedByDefault" )
+  case _                          => Seq()
+})
+
 ThisBuild / packageOptions := Seq(
   ManifestAttributes(
     ( "Build-Jdk", System.getProperty( "java.version" ) ),
@@ -92,7 +96,7 @@ ThisBuild / packageOptions := Seq(
 )
 
 val circeVersion = "0.13.0"
-val scalaTestVersion = "3.1.0"
+val scalaTestVersion = "3.1.1"
 
 val baseJvmDependencies =
   Seq(
@@ -149,7 +153,8 @@ lazy val circeTaggedAdtCodecModelsCross = crossProject( JSPlatform, JVMPlatform 
     libraryDependencies ++= baseJvmDependencies ++ Seq()
   )
   .jsSettings(
-    libraryDependencies ++= baseJsDependencies.value ++ Seq()
+    libraryDependencies ++= baseJsDependencies.value ++ Seq(),
+    scalacOptions ++= scalacJsOptions
   )
 
 lazy val circeTaggedAdtCodecModelsJVM = circeTaggedAdtCodecModelsCross.jvm
@@ -187,7 +192,8 @@ lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
     libraryDependencies ++= baseJvmDependencies ++ Seq()
   )
   .jsSettings(
-    libraryDependencies ++= baseJsDependencies.value ++ Seq()
+    libraryDependencies ++= baseJsDependencies.value ++ Seq(),
+    scalacOptions ++= scalacJsOptions
   )
   .jvmConfigure( _.dependsOn( circeTaggedAdtCodecModelsJVM, circeTaggedAdtCodecMacros ) )
   .jsConfigure( _.dependsOn( circeTaggedAdtCodecModelsJS, circeTaggedAdtCodecMacros ) )

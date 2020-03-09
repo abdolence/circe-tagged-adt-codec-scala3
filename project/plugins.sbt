@@ -4,7 +4,10 @@ addSbtPlugin( "com.jsuereth" % "sbt-pgp" % "2.0.0" )
 
 addSbtPlugin( "org.scalameta" % "sbt-scalafmt" % "2.3.2" )
 
-addSbtPlugin( "org.portable-scala" % "sbt-crossproject" % "0.6.1" )
-addSbtPlugin( "org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.1" )
+addSbtPlugin( "org.portable-scala" % "sbt-crossproject" % "1.0.0" )
+addSbtPlugin( "org.portable-scala" % "sbt-scalajs-crossproject" % "1.0.0" )
 
-addSbtPlugin( "org.scala-js" % "sbt-scalajs" % "0.6.32" )
+val scalaJSVersion =
+  Option( System.getenv( "SCALAJS_VERSION" ) ).getOrElse( "0.6.32" )
+
+addSbtPlugin( "org.scala-js" % "sbt-scalajs" % scalaJSVersion )

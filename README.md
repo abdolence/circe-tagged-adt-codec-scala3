@@ -1,6 +1,6 @@
 ## Circe encoder/decoder implementation for ADT to JSON with a configurable type field.
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.latestbit/circe-tagged-adt-codec_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.latestbit/circe-tagged-adt-codec_2.13/)
-![](https://github.com/abdolence/circe-tagged-adt-codec/workflows/Scala%20CI/badge.svg)
+![](https://github.com/abdolence/circe-tagged-adt-codec/workflows/tests%20and%20formatting/badge.svg)
 
 This library provides an efficient, type safe and macro based 
 ADT to JSON encoder/decoder for circe with configurable JSON type field mappings.
