@@ -1,7 +1,8 @@
 import java.time.format.DateTimeFormatter
 import java.time.{ ZoneOffset, ZonedDateTime }
 import sbt.Package.ManifestAttributes
-import sbtcrossproject.{ crossProject, CrossType }
+import sbtcrossproject.CrossType
+import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 name := "circe-tagged-adt-codec-root"
 
@@ -200,3 +201,8 @@ lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
 
 lazy val circeTaggedAdtCodecLibJVM = circeTaggedAdtCodecLibCross.jvm
 lazy val circeTaggedAdtCodecLibJS = circeTaggedAdtCodecLibCross.js
+
+addCommandAlias(
+  "publishScalaJsOnly",
+  s";+${circeTaggedAdtCodecModelsJS.id}/publishSigned;+${circeTaggedAdtCodecLibJS.id}/publishSigned"
+)
