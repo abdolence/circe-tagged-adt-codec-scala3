@@ -204,5 +204,5 @@ lazy val circeTaggedAdtCodecLibJS = circeTaggedAdtCodecLibCross.js
 
 addCommandAlias(
   "publishScalaJsOnly",
-  s";+${circeTaggedAdtCodecModelsJS.id}/publishSigned;+${circeTaggedAdtCodecLibJS.id}/publishSigned"
+  s";+${circeTaggedAdtCodecModelsJS.id}/publishSigned;+${circeTaggedAdtCodecLibJS.id}/publishSigned;sonatypeRelease"
 )
