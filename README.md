@@ -31,20 +31,20 @@ The main objectives here are:
 - Check at the compile time JSON type field mappings and Scala case classes.
 
 ### Scala support
-- Scala v2.12+
-- Scala.js v0.6.28+
+- Scala v2.12 / v2.13
+- Scala.js v0.6 / v1.0
 
 ### Getting Started
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.7.0"
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.8.0"
 ```
 
 or if you need Scala.js support:
 
 ```scala
-libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.7.0"
+libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.8.0"
 ```
 
 ### Usage
