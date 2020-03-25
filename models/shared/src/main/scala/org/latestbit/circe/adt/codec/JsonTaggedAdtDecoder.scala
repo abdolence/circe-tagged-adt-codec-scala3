@@ -36,8 +36,4 @@ trait JsonTaggedAdtDecoder[T] {
       jsonTypeFieldValue: String,
       cursor: ACursor
   ): Decoder.Result[T]
-
-  /**
- * Convert the specified tag to an object instance without values (for pure enums)
- */
 }
