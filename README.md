@@ -38,13 +38,13 @@ The main objectives here are:
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.8.0"
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.9.0"
 ```
 
 or if you need Scala.js support:
 
 ```scala
-libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.8.0"
+libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.9.0"
 ```
 
 ### Usage
@@ -166,9 +166,28 @@ case class MyIsolatedOtherChildCaseClass() extends MyIsolatedChildTrait
 // (instead of default behaviour where a tag would be a trait name) 
 @JsonAdt("isolated-trait-2")
 sealed trait MySecondIsolatedChildTrait extends MyTrait 
+```
 
+### Pure enum constants / case objects ADT definitions support
 
+Sometimes you just need tags themselves for declarations like this without any additional type tags:
+```scala
+sealed trait MyEnum
+@JsonTag("tag-1")
+case object Enum1 extends MyEnum
 
+@JsonTag("tag-2")
+case object Enum2 extends MyEnum
+//...
+ 
+```
+
+to produce JSON strings for enum constants in json (instead of objects).
+To help with this scenario, ADT codec provides the specialized encoder and decoder implementations:
+
+```scala
+implicit val encoder : Encoder[MyEnum] = JsonTaggedAdtCodec.createPureEnumEncoder[TestEvent]()
+implicit val encoder : Decoder[MyEnum] = JsonTaggedAdtCodec.createPureEnumDecoder[TestEvent]()
 ```
 
 ### Licence

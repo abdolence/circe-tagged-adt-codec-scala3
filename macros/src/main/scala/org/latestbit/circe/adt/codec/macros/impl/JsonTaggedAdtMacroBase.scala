@@ -84,16 +84,16 @@ trait JsonTaggedAdtMacroBase {
     val hasPassThroughAnnotationDefined = hasPassThroughAnnotation( c )( symbol )
 
     if (symAnnotations.size > 1) {
-      c.abort( symbol.pos, s"Only one @JsonAdt is allowed for ${symbol.fullName}" )
+      c.abort( symbol.pos, s"JsonAdt codec: Only one @JsonAdt is allowed for ${symbol.fullName}" )
     } else if (symAnnotations.nonEmpty && hasPassThroughAnnotationDefined) {
       c.abort(
         symbol.pos,
-        s"You can't mix @JsonAdt and @JsonAdtPassThrough for ${symbol.fullName}"
+        s"JsonAdt codec: You can't mix @JsonAdt and @JsonAdtPassThrough for ${symbol.fullName}"
       )
     } else if (hasPassThroughAnnotationDefined && !symbol.asClass.isTrait) {
       c.abort(
         symbol.pos,
-        s"You can't use @JsonAdtPassThrough on anything but trait: ${symbol.fullName}"
+        s"JsonAdt codec: You can't use @JsonAdtPassThrough on anything but trait: ${symbol.fullName}"
       )
     } else {
       symAnnotations.headOption
@@ -142,7 +142,7 @@ trait JsonTaggedAdtMacroBase {
         } else {
           c.abort(
             baseSymbol.pos,
-            s"${baseSymbol} defines neither no sub classes nor its defined as a case class itself"
+            s"JsonAdt codec: ${baseSymbol} defines neither no sub classes nor its defined as a case class itself"
           )
         }
       } else {
@@ -156,7 +156,7 @@ trait JsonTaggedAdtMacroBase {
           case Some( duplicate ) =>
             c.abort(
               duplicate._2.head.symbol.pos,
-              s"${duplicate._2.map( _.symbol.fullName ).mkString( ", " )} defined a duplicate json type: '${duplicate._1}''"
+              s"JsonAdt codec: ${duplicate._2.map( _.symbol.fullName ).mkString( ", " )} defined a duplicate json type: '${duplicate._1}''"
             )
           case _ =>
             traitGenerator( baseSymbol, subclassesMap.flatMap( _._2.headOption ) )
@@ -164,7 +164,10 @@ trait JsonTaggedAdtMacroBase {
       }
 
     } else {
-      c.abort( c.enclosingPosition, s"${baseSymbol.fullName} must be a trait or a case class" )
+      c.abort(
+        c.enclosingPosition,
+        s"JsonAdt codec: ${baseSymbol.fullName} must be a trait or a case class"
+      )
     }
   }
 

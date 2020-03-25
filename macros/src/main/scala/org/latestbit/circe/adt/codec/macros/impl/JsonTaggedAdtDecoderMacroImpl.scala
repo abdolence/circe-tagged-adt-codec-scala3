@@ -55,6 +55,10 @@ object JsonTaggedAdtDecoderMacroImpl extends JsonTaggedAdtMacroBase {
           // format: on
     }
 
+    def parseSymbolObject( symbol: Symbol ): Tree = {
+      c.parse( symbol.fullName )
+    }
+
     def createConverterExpr(
         traitSymbol: Symbol,
         caseClassesConfig: Iterable[JsonAdtConfig[Symbol]]
@@ -67,11 +71,17 @@ object JsonTaggedAdtDecoderMacroImpl extends JsonTaggedAdtMacroBase {
                     import io.circe.syntax._
 		
 			        override def fromJsonObject(jsonTypeFieldValue : String, cursor: ACursor) : Decoder.Result[${traitSymbol}] = {
-	
+                       
 			            jsonTypeFieldValue match {
 	                        case ..${caseClassesConfig.
                                     map { jsonAdtConfig =>
-                                        cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
+                                        if(jsonAdtConfig.hasDataToEncode)
+                                            cq"""${jsonAdtConfig.jsonAdtType} => cursor.as[${jsonAdtConfig.symbol}]"""
+                                        else {
+                                            cq"""${jsonAdtConfig.jsonAdtType} => {
+                                                Right(${parseSymbolObject(jsonAdtConfig.symbol)})
+                                            }"""
+                                        }
                                     }.toList :+
                                         cq"""_ =>
                                             Left(DecodingFailure(s"Unknown json type received: '$$jsonTypeFieldValue'.", cursor.history))

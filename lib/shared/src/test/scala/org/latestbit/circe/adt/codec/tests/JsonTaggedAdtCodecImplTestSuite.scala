@@ -21,6 +21,7 @@ import io.circe.parser._
 import io.circe.syntax._
 import org.latestbit.circe.adt.codec._
 import org.scalatest.flatspec.AnyFlatSpec
+import shapeless.LabelledGeneric
 
 object TestModels {
   sealed trait TestEvent
@@ -114,6 +115,22 @@ object TestModels {
 
   @JsonAdtPassThrough
   case class InvalidPassThroughCaseClass()
+
+  sealed trait PureEnum
+
+  @JsonAdt( "en1" )
+  case object Enum1 extends PureEnum
+  case object Enum2 extends PureEnum
+
+  case class Enum3() extends PureEnum
+
+  object PureEnum {
+
+    @JsonAdt( "en4" )
+    case object Enum4 extends PureEnum
+  }
+
+  case class WrapperPureEnum( test: PureEnum )
 
 }
 
@@ -468,6 +485,38 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
         assert( model === TestEvent2( "test-data" ) )
       case Left( ex ) => fail( ex )
     }
+  }
+
+  it should "be able to decode trait as pure enum objects" in {
+    import io.circe.generic.auto._
+
+    implicit val decoder: Decoder[PureEnum] =
+      JsonTaggedAdtCodec.createPureEnumDecoder[PureEnum]()
+
+    val testJson = """{"test" : "en1" }"""
+
+    decode[WrapperPureEnum](
+      testJson
+    ) match {
+      case Right( model: WrapperPureEnum ) =>
+        assert( model.test === Enum1 )
+      case Left( ex ) => fail( ex )
+    }
+  }
+
+  it should "be able to encode trait as pure enum objects" in {
+    import io.circe.generic.auto._
+
+    implicit val encoder: Encoder[PureEnum] =
+      JsonTaggedAdtCodec.createPureEnumEncoder[PureEnum]()
+
+    val expectedJson = """{"test":"en4"}"""
+
+    val testObject: WrapperPureEnum = WrapperPureEnum( test = PureEnum.Enum4 )
+    val json: String = testObject.asJson.dropNullValues.noSpaces
+
+    assert( json === expectedJson )
+
   }
 
 }

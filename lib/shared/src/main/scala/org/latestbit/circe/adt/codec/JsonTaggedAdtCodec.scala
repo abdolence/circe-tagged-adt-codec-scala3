@@ -69,6 +69,61 @@ object JsonTaggedAdtCodec {
   }
 
   /**
+   * Default implementation of encoding JSON with with pure enum trait without any values
+   *
+   * @param encoder converter for trait and its case classes
+   * @param obj an object to encode
+   * @tparam T A trait type
+   * @return Encoded json object with a type field
+   */
+  protected def defaultJsonPureEnumEncoder[T]()(
+      encoder: JsonTaggedAdtEncoder[T],
+      obj: T
+  ): Json = {
+    val ( _, typeFieldValue ) = encoder.toJsonObject( obj )
+    Json.fromString( typeFieldValue )
+  }
+
+  /**
+   * Default implementation of decoding JSON with pure enum trait without any values
+   *
+   * @param decoder converter for trait and its case classes
+   * @param cursor JSON context cursor
+   * @tparam T A trait type
+   * @return Decode result
+   */
+  protected def defaultJsonPureEnumDecoder[T]()(
+      decoder: JsonTaggedAdtDecoder[T],
+      cursor: HCursor
+  ): Decoder.Result[T] = {
+
+    cursor.as[String].flatMap { typeFieldValue =>
+      decoder.fromJsonObject(
+        jsonTypeFieldValue = typeFieldValue,
+        cursor = cursor
+      )
+    }
+  }
+
+  /**
+   * Create ADT / JSON type field base decoder with a specified type field decoding implementation
+   *
+   * @param typeFieldDecoder JSON type field decoding implementation
+   * @param adtDecoder implicitly created JSON converter for trait and its case classes
+   * @tparam T A trait type
+   * @return circe Decoder of T
+   */
+  def createDecoderDefinition[T](
+      typeFieldDecoder: (
+          JsonTaggedAdtDecoder[T],
+          HCursor
+      ) => Decoder.Result[T]
+  )( implicit adtDecoder: JsonTaggedAdtDecoder[T] ): Decoder[T] =
+    (cursor: HCursor) => {
+      typeFieldDecoder( adtDecoder, cursor )
+    }
+
+  /**
    * Create ADT / JSON type field base encoder with a specified type field encoding implementation
    *
    * @param typeFieldEncoder JSON type field encoding implementation
@@ -97,24 +152,6 @@ object JsonTaggedAdtCodec {
     createEncoderDefinition[T]( defaultJsonTypeFieldEncoder( typeFieldName ) )
 
   /**
-   * Create ADT / JSON type field base decoder with a specified type field decoding implementation
-   *
-   * @param typeFieldDecoder JSON type field decoding implementation
-   * @param adtDecoder implicitly created JSON converter for trait and its case classes
-   * @tparam T A trait type
-   * @return circe Decoder of T
-   */
-  def createDecoderDefinition[T](
-      typeFieldDecoder: (
-          JsonTaggedAdtDecoder[T],
-          HCursor
-      ) => Decoder.Result[T]
-  )( implicit adtDecoder: JsonTaggedAdtDecoder[T] ): Decoder[T] =
-    (cursor: HCursor) => {
-      typeFieldDecoder( adtDecoder, cursor )
-    }
-
-  /**
    * Create ADT / JSON type field base decoder
    *
    * @param typeFieldName a JSON field name to decode type name
@@ -126,5 +163,29 @@ object JsonTaggedAdtCodec {
       typeFieldName: String
   )( implicit adtDecoder: JsonTaggedAdtDecoder[T] ): Decoder[T] =
     createDecoderDefinition[T]( defaultJsonTypeFieldDecoder( typeFieldName ) )
+
+  /**
+   * Create ADT / JSON enum objects encoder
+   *
+   * @param adtEncoder implicitly created JSON converter for trait and its case classes
+   * @tparam T A trait type
+   * @return circe Encoder of T
+   */
+  def createPureEnumEncoder[T]()(
+      implicit adtEncoder: JsonTaggedAdtEncoder[T]
+  ): Encoder[T] =
+    (obj: T) => {
+      defaultJsonPureEnumEncoder()( adtEncoder, obj )
+    }
+
+  /**
+   * Create ADT / JSON pure enum objects decoder
+   *
+   * @param adtDecoder implicitly created JSON converter for trait and its case classes
+   * @tparam T A trait type
+   * @return circe Decoder of T
+   */
+  def createPureEnumDecoder[T]()( implicit adtDecoder: JsonTaggedAdtDecoder[T] ): Decoder[T] =
+    createDecoderDefinition[T]( defaultJsonPureEnumDecoder() )
 
 }
