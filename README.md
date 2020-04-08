@@ -186,8 +186,8 @@ to produce JSON strings for enum constants in json (instead of objects).
 To help with this scenario, ADT codec provides the specialized encoder and decoder implementations:
 
 ```scala
-implicit val encoder : Encoder[MyEnum] = JsonTaggedAdtCodec.createPureEnumEncoder[TestEvent]()
-implicit val encoder : Decoder[MyEnum] = JsonTaggedAdtCodec.createPureEnumDecoder[TestEvent]()
+implicit val encoder : Encoder[MyEnum] = JsonTaggedAdtCodec.createPureEnumEncoder[MyEnum]()
+implicit val encoder : Decoder[MyEnum] = JsonTaggedAdtCodec.createPureEnumDecoder[MyEnum]()
 ```
 
 ### Licence
