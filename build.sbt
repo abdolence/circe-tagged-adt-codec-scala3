@@ -6,7 +6,7 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 name := "circe-tagged-adt-codec-root"
 
-ThisBuild / version := "0.9.0"
+ThisBuild / version := "0.9.1"
 
 ThisBuild / organization := "org.latestbit"
 
@@ -19,11 +19,11 @@ ThisBuild / licenses := Seq(
   )
 )
 
-ThisBuild / crossScalaVersions := Seq( "2.12.11", "2.13.1" )
+ThisBuild / crossScalaVersions := Seq( "2.12.11", "2.13.2" )
 
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.head
 
-ThisBuild / sbtVersion := "1.3.8"
+ThisBuild / sbtVersion := "1.3.9"
 
 ThisBuild / scalacOptions ++= Seq( "-feature" )
 
@@ -49,7 +49,7 @@ ThisBuild / pomExtra := (
 	<developer>
 	<id>abdulla</id>
 	<name>Abdulla Abdurakhmanov</name>
-	<url>https://latestbit.com</url>
+	<url>https://abdolence.dev</url>
 	</developer>
   </developers>
 )
@@ -65,7 +65,7 @@ ThisBuild / scalacOptions ++= Seq(
   "-feature",
   "-language:higherKinds"
 ) ++ (CrossVersion.partialVersion( (ThisBuild / scalaVersion).value ) match {
-  case Some( ( 2, n ) ) if n >= 13 => Seq( "-Xsource:2.14" )
+  case Some( ( 2, n ) ) if n >= 13 => Seq( "-Xsource:3" )
   case Some( ( 2, n ) ) if n < 13  => Seq( "-Ypartial-unification" )
   case _                           => Seq()
 })
