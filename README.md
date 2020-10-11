@@ -173,10 +173,10 @@ sealed trait MySecondIsolatedChildTrait extends MyTrait
 Sometimes you just need tags themselves for declarations like this without any additional type tags:
 ```scala
 sealed trait MyEnum
-@JsonTag("tag-1")
+@JsonAdt("tag-1")
 case object Enum1 extends MyEnum
 
-@JsonTag("tag-2")
+@JsonAdt("tag-2")
 case object Enum2 extends MyEnum
 //...
  
@@ -187,7 +187,7 @@ To help with this scenario, ADT codec provides the specialized encoder and decod
 
 ```scala
 implicit val encoder : Encoder[MyEnum] = JsonTaggedAdtCodec.createPureEnumEncoder[MyEnum]()
-implicit val encoder : Decoder[MyEnum] = JsonTaggedAdtCodec.createPureEnumDecoder[MyEnum]()
+implicit val decoder : Decoder[MyEnum] = JsonTaggedAdtCodec.createPureEnumDecoder[MyEnum]()
 ```
 
 ### Licence
