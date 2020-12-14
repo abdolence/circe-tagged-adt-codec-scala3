@@ -51,16 +51,15 @@ trait JsonTaggedAdtMacroBase {
   ): Set[c.universe.Symbol] = {
     if (symbol.isClass && symbol.asClass.isTrait) {
       val directSubclasses: Set[c.universe.Symbol] = symbol.asClass.knownDirectSubclasses
-      directSubclasses.foldLeft( Set[c.universe.Symbol]() ) {
-        case ( all, subclass ) =>
-          if (subclass.isClass) {
-            if (subclass.asClass.isTrait && hasPassThroughAnnotation( c )( subclass )) {
-              all ++ getAllSubclasses( c )( subclass )
-            } else {
-              all + subclass
-            }
-          } else
-            all
+      directSubclasses.foldLeft( Set[c.universe.Symbol]() ) { case ( all, subclass ) =>
+        if (subclass.isClass) {
+          if (subclass.asClass.isTrait && hasPassThroughAnnotation( c )( subclass )) {
+            all ++ getAllSubclasses( c )( subclass )
+          } else {
+            all + subclass
+          }
+        } else
+          all
       }
     } else
       Set()

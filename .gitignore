@@ -64,3 +64,6 @@ hs_err_pid*
 
 **/target/**
 *.swp
+metals.sbt
+metals/
+

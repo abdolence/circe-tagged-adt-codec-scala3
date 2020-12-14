@@ -6,7 +6,7 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 name := "circe-tagged-adt-codec-root"
 
-ThisBuild / version := "0.9.1"
+ThisBuild / version := "0.10.0"
 
 ThisBuild / organization := "org.latestbit"
 
@@ -19,17 +19,13 @@ ThisBuild / licenses := Seq(
   )
 )
 
-ThisBuild / crossScalaVersions := Seq( "2.12.11", "2.13.2" )
+ThisBuild / crossScalaVersions := Seq( "2.12.12", "2.13.4" )
 
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.head
 
-ThisBuild / sbtVersion := "1.3.9"
-
-ThisBuild / scalacOptions ++= Seq( "-feature" )
+ThisBuild / sbtVersion := "1.4.4"
 
 ThisBuild / exportJars := true
-
-ThisBuild / publishMavenStyle := true
 
 ThisBuild / publishTo := {
   val nexus = "https://oss.sonatype.org/"
@@ -59,12 +55,12 @@ ThisBuild / resolvers ++= Seq(
   "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 
-ThisBuild / scalacOptions ++= Seq(
+def baseScalacOptions(scalaVersionStr: String) = Seq(
   "-deprecation",
   "-unchecked",
   "-feature",
-  "-language:higherKinds"
-) ++ (CrossVersion.partialVersion( (ThisBuild / scalaVersion).value ) match {
+  "-language:higherKinds",
+) ++ (CrossVersion.partialVersion( scalaVersionStr ) match {
   case Some( ( 2, n ) ) if n >= 13 => Seq( "-Xsource:3" )
   case Some( ( 2, n ) ) if n < 13  => Seq( "-Ypartial-unification" )
   case _                           => Seq()
@@ -129,7 +125,8 @@ lazy val circeTaggedAdtCodecRoot =
     .settings(
       publish := {},
       publishLocal := {},
-      crossScalaVersions := List()
+      crossScalaVersions := List(),
+      scalacOptions := baseScalacOptions(scalaVersion.value)
     )
 
 lazy val circeTaggedAdtCodecModels =
@@ -140,7 +137,8 @@ lazy val circeTaggedAdtCodecModels =
       name := "circe-tagged-adt-codec-models",
       publish := {},
       publishLocal := {},
-      crossScalaVersions := List()
+      crossScalaVersions := List(),
+      scalacOptions := baseScalacOptions(scalaVersion.value)
     )
 
 lazy val circeTaggedAdtCodecModelsCross = crossProject( JSPlatform, JVMPlatform )
@@ -148,7 +146,8 @@ lazy val circeTaggedAdtCodecModelsCross = crossProject( JSPlatform, JVMPlatform 
   .crossType( CrossType.Full )
   .in( file( "models" ) )
   .settings(
-    name := "circe-tagged-adt-codec-models"
+    name := "circe-tagged-adt-codec-models",
+    scalacOptions := baseScalacOptions(scalaVersion.value)
   )
   .jvmSettings(
     libraryDependencies ++= baseJvmDependencies ++ Seq()
@@ -167,7 +166,8 @@ lazy val circeTaggedAdtCodecMacros =
       name := "circe-tagged-adt-codec-macros",
       libraryDependencies ++= baseJvmDependencies ++ Seq(
         "org.scala-lang" % "scala-reflect" % scalaVersion.value
-      )
+      ),
+      scalacOptions := baseScalacOptions(scalaVersion.value)
     )
     .dependsOn( circeTaggedAdtCodecModelsJVM )
 
@@ -179,7 +179,8 @@ lazy val circeTaggedAdtCodecLib =
       name := "circe-tagged-adt-codec",
       publish := {},
       publishLocal := {},
-      crossScalaVersions := List()
+      crossScalaVersions := List(),
+      scalacOptions := baseScalacOptions(scalaVersion.value)
     )
 
 lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
@@ -187,7 +188,8 @@ lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
   .crossType( CrossType.Full )
   .in( file( "lib" ) )
   .settings(
-    name := "circe-tagged-adt-codec"
+    name := "circe-tagged-adt-codec",
+    scalacOptions := baseScalacOptions(scalaVersion.value)
   )
   .jvmSettings(
     libraryDependencies ++= baseJvmDependencies ++ Seq()

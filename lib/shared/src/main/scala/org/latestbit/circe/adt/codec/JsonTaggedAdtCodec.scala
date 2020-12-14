@@ -119,7 +119,7 @@ object JsonTaggedAdtCodec {
           HCursor
       ) => Decoder.Result[T]
   )( implicit adtDecoder: JsonTaggedAdtDecoder[T] ): Decoder[T] =
-    (cursor: HCursor) => {
+    ( cursor: HCursor) => {
       typeFieldDecoder( adtDecoder, cursor )
     }
 
@@ -134,7 +134,7 @@ object JsonTaggedAdtCodec {
   def createEncoderDefinition[T](
       typeFieldEncoder: ( JsonTaggedAdtEncoder[T], T ) => JsonObject
   )( implicit adtEncoder: JsonTaggedAdtEncoder[T] ): Encoder.AsObject[T] =
-    (obj: T) => {
+    ( obj: T) => {
       typeFieldEncoder( adtEncoder, obj )
     }
 
@@ -171,10 +171,10 @@ object JsonTaggedAdtCodec {
    * @tparam T A trait type
    * @return circe Encoder of T
    */
-  def createPureEnumEncoder[T]()(
-      implicit adtEncoder: JsonTaggedAdtEncoder[T]
+  def createPureEnumEncoder[T]()( implicit
+      adtEncoder: JsonTaggedAdtEncoder[T]
   ): Encoder[T] =
-    (obj: T) => {
+    ( obj: T) => {
       defaultJsonPureEnumEncoder()( adtEncoder, obj )
     }
 

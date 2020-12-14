@@ -436,17 +436,16 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
     import io.circe.generic.auto._
 
     implicit val encoder: Encoder[TestEvent] =
-      JsonTaggedAdtCodec.createEncoderDefinition[TestEvent] {
-        case ( converter, obj ) =>
-          // converting our case classes accordingly to obj instance type
-          // and receiving JSON type field value from annotation
-          val ( jsonObj, typeFieldValue ) = converter.toJsonObject( obj )
+      JsonTaggedAdtCodec.createEncoderDefinition[TestEvent] { case ( converter, obj ) =>
+        // converting our case classes accordingly to obj instance type
+        // and receiving JSON type field value from annotation
+        val ( jsonObj, typeFieldValue ) = converter.toJsonObject( obj )
 
-          // Our custom JSON structure
-          JsonObject(
-            "type" -> Json.fromString( typeFieldValue ),
-            "body" -> Json.fromJsonObject( jsonObj )
-          )
+        // Our custom JSON structure
+        JsonObject(
+          "type" -> Json.fromString( typeFieldValue ),
+          "body" -> Json.fromJsonObject( jsonObj )
+        )
       }
 
     val testEvent: TestEvent = TestEvent1( "test" )
@@ -460,20 +459,19 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
     import io.circe.generic.auto._
 
     implicit val decoder: Decoder[TestEvent] =
-      JsonTaggedAdtCodec.createDecoderDefinition[TestEvent] {
-        case ( converter, cursor ) =>
-          cursor.get[Option[String]]( "type" ).flatMap {
-            case Some( typeFieldValue ) =>
-              // Decode a case class from body accordingly to typeFieldValue
-              converter.fromJsonObject(
-                jsonTypeFieldValue = typeFieldValue,
-                cursor = cursor.downField( "body" )
-              )
-            case _ =>
-              Decoder.failedWithMessage( s"'type' isn't specified in json." )(
-                cursor
-              )
-          }
+      JsonTaggedAdtCodec.createDecoderDefinition[TestEvent] { case ( converter, cursor ) =>
+        cursor.get[Option[String]]( "type" ).flatMap {
+          case Some( typeFieldValue ) =>
+            // Decode a case class from body accordingly to typeFieldValue
+            converter.fromJsonObject(
+              jsonTypeFieldValue = typeFieldValue,
+              cursor = cursor.downField( "body" )
+            )
+          case _ =>
+            Decoder.failedWithMessage( s"'type' isn't specified in json." )(
+              cursor
+            )
+        }
       }
 
     val testJson = """{"type" : "ev2", "body" : { "f1" : "test-data" } }"""
