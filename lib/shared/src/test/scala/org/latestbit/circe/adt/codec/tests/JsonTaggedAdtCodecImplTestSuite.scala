@@ -518,8 +518,10 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "be able to encode/decode inside containers with only one case class" in {
-    implicit val encoder: Encoder.AsObject[AloneCaseClass] = JsonTaggedAdtCodec.createEncoder[AloneCaseClass]( "tp" )
-    implicit val decoder: Decoder[AloneCaseClass] = JsonTaggedAdtCodec.createDecoder[AloneCaseClass]( "tp" )
+    implicit val encoder: Encoder.AsObject[AloneCaseClass] =
+      JsonTaggedAdtCodec.createEncoder[AloneCaseClass]( "tp" )
+    implicit val decoder: Decoder[AloneCaseClass] =
+      JsonTaggedAdtCodec.createDecoder[AloneCaseClass]( "tp" )
 
     decode[Seq[AloneCaseClass]]( Seq( AloneCaseClass() ).asJson.toString() ) match {
       case Right( model: Seq[AloneCaseClass] ) => {
