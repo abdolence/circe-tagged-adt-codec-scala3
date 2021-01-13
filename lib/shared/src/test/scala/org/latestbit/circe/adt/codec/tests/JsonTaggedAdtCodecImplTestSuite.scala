@@ -131,6 +131,7 @@ object TestModels {
 
   case class WrapperPureEnum( test: PureEnum )
 
+  case class AloneCaseClass( a: Int = 0 )
 }
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
@@ -517,16 +518,12 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "be able to encode/decode inside containers with only one case class" in {
-    import io.circe.parser._
-    import io.circe.syntax._
-    import org.latestbit.circe.adt.codec._
+    implicit val encoder: Encoder.AsObject[AloneCaseClass] = JsonTaggedAdtCodec.createEncoder[AloneCaseClass]( "tp" )
+    implicit val decoder: Decoder[AloneCaseClass] = JsonTaggedAdtCodec.createDecoder[AloneCaseClass]( "tp" )
 
-    case class Cls( a: Int = 0 )
-    implicit val e: Encoder.AsObject[Cls] = JsonTaggedAdtCodec.createEncoder[Cls]( "tp" )
-    implicit val d: Decoder[Cls] = JsonTaggedAdtCodec.createDecoder[Cls]( "tp" )
-    decode[Seq[Cls]]( Seq( Cls() ).asJson.toString() ) match {
-      case Right( model: Seq[Cls] ) => {
-        assert( model.headOption.contains( Cls() ) )
+    decode[Seq[AloneCaseClass]]( Seq( AloneCaseClass() ).asJson.toString() ) match {
+      case Right( model: Seq[AloneCaseClass] ) => {
+        assert( model.headOption.contains( AloneCaseClass() ) )
       }
       case Left( ex ) => fail( ex )
     }
