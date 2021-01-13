@@ -139,7 +139,7 @@ implicit val decoder: Decoder[TestEvent] =
 
 ### Complex ADT definitions and trait inheritance
 
-All the following examples are support for this codec:
+All the following examples are supported by this codec:
 ```scala
 
 sealed trait MyTrait
@@ -170,7 +170,7 @@ sealed trait MySecondIsolatedChildTrait extends MyTrait
 
 ### Pure enum constants / case objects ADT definitions support
 
-Sometimes you just need tags themselves for declarations like this without any additional type tags:
+Sometimes you just need tags constants themselves for declarations like this, without any additional type tags and objects:
 ```scala
 sealed trait MyEnum
 @JsonAdt("tag-1")
