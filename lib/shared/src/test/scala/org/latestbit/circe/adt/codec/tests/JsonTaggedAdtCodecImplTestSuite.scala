@@ -21,7 +21,6 @@ import io.circe.parser._
 import io.circe.syntax._
 import org.latestbit.circe.adt.codec._
 import org.scalatest.flatspec.AnyFlatSpec
-import shapeless.LabelledGeneric
 
 object TestModels {
   sealed trait TestEvent
@@ -515,6 +514,22 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
     assert( json === expectedJson )
 
+  }
+
+  it should "be able to encode/decode inside containers with only one case class" in {
+    import io.circe.parser._
+    import io.circe.syntax._
+    import org.latestbit.circe.adt.codec._
+
+    case class Cls( a: Int = 0 )
+    implicit val e: Encoder.AsObject[Cls] = JsonTaggedAdtCodec.createEncoder[Cls]( "tp" )
+    implicit val d: Decoder[Cls] = JsonTaggedAdtCodec.createDecoder[Cls]( "tp" )
+    decode[Seq[Cls]]( Seq( Cls() ).asJson.toString() ) match {
+      case Right( model: Seq[Cls] ) => {
+        assert( model.headOption.contains( Cls() ) )
+      }
+      case Left( ex ) => fail( ex )
+    }
   }
 
 }
