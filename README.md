@@ -32,19 +32,19 @@ The main objectives here are:
 
 ### Scala support
 - Scala v2.12 / v2.13
-- Scala.js v0.6 / v1
+- Scala.js v1+
 
 ### Getting Started
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.9.1"
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.10.0"
 ```
 
 or if you need Scala.js support:
 
 ```scala
-libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.9.1"
+libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.10.0"
 ```
 
 ### Usage
