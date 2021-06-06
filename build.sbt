@@ -8,6 +8,8 @@ name := "circe-tagged-adt-codec-root"
 
 ThisBuild / version := "0.10.0-SNAPSHOT"
 
+ThisBuild / versionScheme := Some("semver-spec")
+
 ThisBuild / organization := "org.latestbit"
 
 ThisBuild / homepage := Some( url( "https://github.com/abdolence/circe-tagged-adt-codec" ) )
