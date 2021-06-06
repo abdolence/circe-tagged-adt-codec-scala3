@@ -23,8 +23,6 @@ ThisBuild / crossScalaVersions := Seq( "2.12.13", "2.13.6" )
 
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.head
 
-ThisBuild / sbtVersion := "1.4.4"
-
 ThisBuild / exportJars := true
 
 ThisBuild / publishTo := {
