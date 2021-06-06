@@ -89,7 +89,7 @@ ThisBuild / packageOptions := Seq(
   )
 )
 
-val circeVersion = "0.13.0"
+val circeVersion = "0.14.0"
 val scalaTestVersion = "3.1.1"
 
 val baseJvmDependencies =
