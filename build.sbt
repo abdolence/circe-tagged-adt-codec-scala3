@@ -73,10 +73,7 @@ ThisBuild / javacOptions ++= Seq(
   "-Xlint"
 )
 
-val scalacJsOptions = (CrossVersion.partialVersion( scalaJSVersion ) match {
-  case Some( ( 0, n ) ) if n <= 6 => Seq( "-P:scalajs:sjsDefinedByDefault" )
-  case _                          => Seq()
-})
+val scalacJsOptions = Seq()
 
 ThisBuild / packageOptions := Seq(
   ManifestAttributes(
@@ -102,7 +99,7 @@ val baseJvmDependencies =
     Seq(
       "org.scalactic" %% "scalactic",
       "org.scalatest" %% "scalatest"
-    ).map( _ % scalaTestVersion % "test" )
+    ).map( _ % scalaTestVersion % Test )
 
 val baseJsDependencies =
   Def.setting(
@@ -114,7 +111,7 @@ val baseJsDependencies =
       Seq(
         "org.scalactic" %%% "scalactic",
         "org.scalatest" %%% "scalatest"
-      ).map( _ % scalaTestVersion % "test" )
+      ).map( _ % scalaTestVersion % Test )
   )
 
 lazy val circeTaggedAdtCodecRoot =
