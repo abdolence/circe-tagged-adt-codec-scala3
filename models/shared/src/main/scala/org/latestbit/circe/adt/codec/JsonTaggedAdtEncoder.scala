@@ -21,14 +21,17 @@ import io.circe.JsonObject
 /**
  * Auxiliary ADT case classes to JSON object converter
  *
- * @tparam T A trait type
+ * @tparam T
+ *   A trait type
  */
 trait JsonTaggedAdtEncoder[T] {
 
   /**
    * Convert a trait to circe JsonObject
-   * @param obj an instance of T
-   * @return Encoded JSON object and its JSON type field value
+   * @param obj
+   *   an instance of T
+   * @return
+   *   Encoded JSON object and its JSON type field value
    */
   def toJsonObject( obj: T ): ( JsonObject, String )
 

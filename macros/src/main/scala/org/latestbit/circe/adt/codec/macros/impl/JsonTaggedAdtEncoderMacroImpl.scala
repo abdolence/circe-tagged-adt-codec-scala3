@@ -25,8 +25,10 @@ object JsonTaggedAdtEncoderMacroImpl extends JsonTaggedAdtMacroBase {
 
   /**
    * ADT / JSON type field based trait encoding and decoding implementation as a macro
-   * @tparam T a trait type
-   * @return a converter instance of T
+   * @tparam T
+   *   a trait type
+   * @return
+   *   a converter instance of T
    */
   def createAdtEncoderMacro[T : c.WeakTypeTag](
       c: blackbox.Context

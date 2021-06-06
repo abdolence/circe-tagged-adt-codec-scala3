@@ -21,16 +21,21 @@ import io.circe.{ ACursor, Decoder }
 /**
  * Auxiliary JSON object to ADT case classes converter
  *
- * @tparam T A trait type
+ * @tparam T
+ *   A trait type
  */
 trait JsonTaggedAdtDecoder[T] {
 
   /**
-   * Convert a current JSON context specified with a cursor and a JSON type field value
-   * to suitable case class instance
-   * @param jsonTypeFieldValue a JSON type field value
-   * @param cursor JSON decoding cursor
-   * @return decoding result of the instance of a case class, accordingly to a jsonTypeFieldValue and a trait type
+   * Convert a current JSON context specified with a cursor and a JSON type field value to suitable
+   * case class instance
+   * @param jsonTypeFieldValue
+   *   a JSON type field value
+   * @param cursor
+   *   JSON decoding cursor
+   * @return
+   *   decoding result of the instance of a case class, accordingly to a jsonTypeFieldValue and a
+   *   trait type
    */
   def fromJsonObject(
       jsonTypeFieldValue: String,

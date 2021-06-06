@@ -19,6 +19,7 @@ package org.latestbit.circe.adt.codec
 import scala.annotation.StaticAnnotation
 
 /**
- * ADT / JSON coder/encoder annotation to specify if encoder/decoder should pass through trait inheritance
+ * ADT / JSON coder/encoder annotation to specify if encoder/decoder should pass through trait
+ * inheritance
  */
 class JsonAdtPassThrough() extends StaticAnnotation
