@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Abdulla Abdurakhmanov (abdulla@latestbit.com)
+ * Copyright 2021 Abdulla Abdurakhmanov (abdulla@latestbit.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,29 @@
 
 package org.latestbit.circe.adt.codec
 
-import io.circe.JsonObject
+import io.circe._
 
 /**
- * Auxiliary ADT case classes to JSON object converter
+ * Auxiliary JSON object to ADT case classes converter
  *
  * @tparam T
  *   A trait type
  */
-trait JsonTaggedAdtEncoder[T] {
+trait JsonTaggedAdtDecoder[T] {
 
   /**
-   * Convert a trait to circe JsonObject
-   * @param obj
-   *   an instance of T
+   * Convert a current JSON context specified with a cursor and a JSON type field value to suitable
+   * case class instance
+   * @param jsonTypeFieldValue
+   *   a JSON type field value
+   * @param cursor
+   *   JSON decoding cursor
    * @return
-   *   Encoded JSON object and its JSON type field value
+   *   decoding result of the instance of a case class, accordingly to a jsonTypeFieldValue and a
+   *   trait type
    */
-  def toJsonObject( obj: T ): ( JsonObject, String )
-
+  def fromJsonObject(
+      jsonTypeFieldValue: String,
+      cursor: ACursor
+  ): Decoder.Result[T]
 }

@@ -21,7 +21,7 @@ ThisBuild / licenses := Seq(
   )
 )
 
-ThisBuild / crossScalaVersions := Seq( "2.12.13", "2.13.6" )
+ThisBuild / crossScalaVersions := Seq( "3.0.0" )
 
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.head
 
@@ -90,7 +90,7 @@ ThisBuild / packageOptions := Seq(
 )
 
 val circeVersion = "0.14.0"
-val scalaTestVersion = "3.1.1"
+val scalaTestVersion = "3.2.9"
 
 val baseJvmDependencies =
   Seq(
@@ -118,55 +118,13 @@ val baseJsDependencies =
 
 lazy val circeTaggedAdtCodecRoot =
   (project in file( "." ))
-    .aggregate( circeTaggedAdtCodecModels, circeTaggedAdtCodecMacros, circeTaggedAdtCodecLib )
+    .aggregate( circeTaggedAdtCodecLib )
     .settings(
       publish := {},
       publishLocal := {},
       crossScalaVersions := List(),
       scalacOptions := baseScalacOptions(scalaVersion.value)
     )
-
-lazy val circeTaggedAdtCodecModels =
-  project
-    .in( file( "models" ) )
-    .aggregate( circeTaggedAdtCodecModelsJVM, circeTaggedAdtCodecModelsJS )
-    .settings(
-      name := "circe-tagged-adt-codec-models",
-      publish := {},
-      publishLocal := {},
-      crossScalaVersions := List(),
-      scalacOptions := baseScalacOptions(scalaVersion.value)
-    )
-
-lazy val circeTaggedAdtCodecModelsCross = crossProject( JSPlatform, JVMPlatform )
-  .withoutSuffixFor( JVMPlatform )
-  .crossType( CrossType.Full )
-  .in( file( "models" ) )
-  .settings(
-    name := "circe-tagged-adt-codec-models",
-    scalacOptions := baseScalacOptions(scalaVersion.value)
-  )
-  .jvmSettings(
-    libraryDependencies ++= baseJvmDependencies ++ Seq()
-  )
-  .jsSettings(
-    libraryDependencies ++= baseJsDependencies.value ++ Seq(),
-    scalacOptions ++= scalacJsOptions
-  )
-
-lazy val circeTaggedAdtCodecModelsJVM = circeTaggedAdtCodecModelsCross.jvm
-lazy val circeTaggedAdtCodecModelsJS = circeTaggedAdtCodecModelsCross.js
-
-lazy val circeTaggedAdtCodecMacros =
-  (project in file( "macros" ))
-    .settings(
-      name := "circe-tagged-adt-codec-macros",
-      libraryDependencies ++= baseJvmDependencies ++ Seq(
-        "org.scala-lang" % "scala-reflect" % scalaVersion.value
-      ),
-      scalacOptions := baseScalacOptions(scalaVersion.value)
-    )
-    .dependsOn( circeTaggedAdtCodecModelsJVM )
 
 lazy val circeTaggedAdtCodecLib =
   project
@@ -195,13 +153,7 @@ lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
     libraryDependencies ++= baseJsDependencies.value ++ Seq(),
     scalacOptions ++= scalacJsOptions
   )
-  .jvmConfigure( _.dependsOn( circeTaggedAdtCodecModelsJVM, circeTaggedAdtCodecMacros ) )
-  .jsConfigure( _.dependsOn( circeTaggedAdtCodecModelsJS, circeTaggedAdtCodecMacros ) )
 
 lazy val circeTaggedAdtCodecLibJVM = circeTaggedAdtCodecLibCross.jvm
 lazy val circeTaggedAdtCodecLibJS = circeTaggedAdtCodecLibCross.js
 
-addCommandAlias(
-  "publishScalaJsOnly",
-  s";+${circeTaggedAdtCodecModelsJS.id}/publishSigned;+${circeTaggedAdtCodecLibJS.id}/publishSigned;sonatypeRelease"
-)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Abdulla Abdurakhmanov (abdulla@latestbit.com)
+ * Copyright 2021 Abdulla Abdurakhmanov (abdulla@latestbit.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,23 @@
 
 package org.latestbit.circe.adt.codec
 
-import scala.annotation.StaticAnnotation
+import io.circe._
 
 /**
- * ADT / JSON coder/encoder annotation to provide Json type field values for case classes
- * @param jsonAdtType
- *   A JSON type field value for a case class
+ * Auxiliary ADT case classes to JSON object converter
+ *
+ * @tparam T
+ *   A trait type
  */
-class JsonAdt( jsonAdtType: String ) extends StaticAnnotation
+trait JsonTaggedAdtEncoder[T] {
+
+  /**
+   * Convert a trait to circe JsonObject
+   * @param obj
+   *   an instance of T
+   * @return
+   *   Encoded JSON object and its JSON type field value
+   */
+  def toJsonObject( obj: T ): ( JsonObject, String )
+
+}
