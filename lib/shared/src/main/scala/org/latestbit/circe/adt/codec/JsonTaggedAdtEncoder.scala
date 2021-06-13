@@ -34,16 +34,6 @@ sealed trait JsonTaggedAdtEncoderWithConfig[T] extends JsonTaggedAdtEncoder[T]
 
 object JsonTaggedAdtEncoder {
 
-  final val DefaultTypeFieldName: String = "type"
-  type TagMappingFunction[E] = PartialFunction[E,String]
-
-  case class Config[E]( typeFieldName: String = DefaultTypeFieldName,
-                        toTag: TagMappingFunction[E] = PartialFunction.empty)
-
-  object Config {
-    inline final def empty[E] = Config[E]()
-  }
-
   class JsonAdtFieldDef[T](val fieldLabel: String, val encoder: Encoder.AsObject[T]) {
     inline def toJsonObject( obj: T ): JsonObject = encoder.encodeObject(obj)
   }
@@ -64,7 +54,7 @@ object JsonTaggedAdtEncoder {
     }
   }
 
-  private inline def createJsonTaggedAdtEncoder[T](using m: Mirror.Of[T], adtConfig: Config[T]): JsonTaggedAdtEncoder[T] = {
+  private inline def createJsonTaggedAdtEncoder[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtEncoder[T] = {
     lazy val allDefs: Vector[JsonAdtFieldDef[_]] = summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
 
     inline m match {
@@ -99,12 +89,13 @@ object JsonTaggedAdtEncoder {
     }
   }
 
-  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: Config[T] = Config.empty[T]): JsonTaggedAdtEncoder[T] = createJsonTaggedAdtEncoder[T]
+  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T] = JsonTaggedAdt.Config.empty[T]): JsonTaggedAdtEncoder[T] = createJsonTaggedAdtEncoder[T]
 
 }
 
 object JsonTaggedAdtEncoderWithConfig {
-  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdtEncoder.Config[T]): JsonTaggedAdtEncoderWithConfig[T] = {
+
+  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtEncoderWithConfig[T] = {
     val parent = JsonTaggedAdtEncoder.derived[T]
     new JsonTaggedAdtEncoderWithConfig[T] {
       override def encodeObject(obj: T): JsonObject = {

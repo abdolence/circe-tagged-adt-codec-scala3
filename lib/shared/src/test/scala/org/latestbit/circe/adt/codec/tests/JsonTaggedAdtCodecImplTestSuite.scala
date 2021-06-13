@@ -24,18 +24,18 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import io.circe.generic.semiauto._
 
-enum TestModelWithDefaults derives JsonTaggedAdtEncoder {
+enum TestModelWithDefaults derives JsonTaggedAdt.Encoder {
   case Event1
   case Event2( f1: String )
 }
 
-given adtConfig: JsonTaggedAdtEncoder.Config[TestModelWithConfig] = JsonTaggedAdtEncoder.Config[TestModelWithConfig] (
+given adtConfig: JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config[TestModelWithConfig] (
   toTag = {
     case TestModelWithConfig.Event1 => "ev1"
   }
 )
 
-enum TestModelWithConfig derives JsonTaggedAdtEncoderWithConfig {
+enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig {
   case Event1
   case Event2( f1: String )
 }
@@ -43,10 +43,15 @@ enum TestModelWithConfig derives JsonTaggedAdtEncoderWithConfig {
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
   "JsonTaggedAdtCodec" should "be able to serialise ADTs correctly with default config" in {
-    val testModel: TestModelWithDefaults = TestModelWithDefaults.Event1
-    val json: String = testModel.asJson.dropNullValues.noSpaces
+    val testModel1: TestModelWithDefaults = TestModelWithDefaults.Event1
+    val json1: String = testModel1.asJson.dropNullValues.noSpaces
 
-    assert( json.contains( """"type":"Event1"""" ) )
+    val testModel2: TestModelWithDefaults = TestModelWithDefaults.Event2("test-val")
+    val json2: String = testModel2.asJson.dropNullValues.noSpaces
+
+    assert( json1.contains( """"type":"Event1"""" ) )
+    assert( json2.contains( """"type":"Event2"""" ) )
+    assert( json2.contains( """"f1":"test-val"""" ) )
   }
 
   it should "be able to deserialise ADTs with default config" in {
