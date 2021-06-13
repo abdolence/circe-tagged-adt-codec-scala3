@@ -35,7 +35,7 @@ sealed trait JsonTaggedAdtEncoderWithConfig[T] extends JsonTaggedAdtEncoder[T]
 object JsonTaggedAdtEncoder {
 
   class JsonAdtFieldDef[T](val fieldLabel: String, val encoder: Encoder.AsObject[T]) {
-    inline def toJsonObject( obj: T ): JsonObject = encoder.encodeObject(obj)
+    def toJsonObject( obj: T ): JsonObject = encoder.encodeObject(obj)
   }
 
   private inline final def summonEncoder[A]: Encoder.AsObject[A] = summonFrom {
@@ -89,7 +89,10 @@ object JsonTaggedAdtEncoder {
     }
   }
 
-  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T] = JsonTaggedAdt.Config.empty[T]): JsonTaggedAdtEncoder[T] = createJsonTaggedAdtEncoder[T]
+  implicit inline given derived[T](using m: Mirror.Of[T],
+                                   adtConfig: JsonTaggedAdt.Config[T] =
+                                    JsonTaggedAdt.Config.empty[T]): JsonTaggedAdtEncoder[T] =
+    createJsonTaggedAdtEncoder[T]
 
 }
 
