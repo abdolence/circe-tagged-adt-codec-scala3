@@ -19,10 +19,10 @@ package org.latestbit.circe.adt.codec
 object JsonTaggedAdt {
 
   final val DefaultTypeFieldName: String = "type"
-  type TagMappingFunction[E] = PartialFunction[E,String]
 
   case class Config[E]( typeFieldName: String = DefaultTypeFieldName,
-                        toTag: TagMappingFunction[E] = PartialFunction.empty)
+                        toTag: PartialFunction[E,String] = PartialFunction.empty,
+                        fromTag: PartialFunction[String,E] = PartialFunction.empty)
 
   object Config {
     inline final def empty[E] = Config[E]()
@@ -32,5 +32,7 @@ object JsonTaggedAdt {
   type EncoderWithConfig[T] = JsonTaggedAdtEncoderWithConfig[T]
 
   type Decoder[T] = JsonTaggedAdtDecoder[T]
+  type DecoderWithConfig[T] = JsonTaggedAdtDecoderWithConfig[T]
 
+  type Codec[T] = Encoder[T] with Decoder[T]
 }

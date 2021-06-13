@@ -20,12 +20,6 @@ import io.circe.*
 import scala.deriving.*
 import scala.compiletime.*
 
-/**
- * Auxiliary ADT case classes to JSON object converter
- *
- * @tparam T
- *   A trait type
- */
 sealed trait JsonTaggedAdtEncoder[T] extends Encoder.AsObject[T] {
   def tagFor(obj: T): String
 }
@@ -38,15 +32,15 @@ object JsonTaggedAdtEncoder {
     def toJsonObject( obj: T ): JsonObject = encoder.encodeObject(obj)
   }
 
-  private inline final def summonEncoder[A]: Encoder.AsObject[A] = summonFrom {
-    case encodeA: Encoder.AsObject[A] => encodeA
-    case _: Mirror.Of[A] => Encoder.AsObject.derived[A]
+  private inline final def summonEncoder[T]: Encoder.AsObject[T] = summonFrom {
+    case encodeA: Encoder.AsObject[T] => encodeA
+    case _: Mirror.Of[T] => Encoder.AsObject.derived[T]
   }
 
   private inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple]: Vector[JsonAdtFieldDef[_]] = {
     inline erasedValue[(Fields, Types)] match {
       case (_: (field *: fields), _: (tpe *: types)) =>
-        new JsonAdtFieldDef[tpe](
+        JsonAdtFieldDef[tpe](
           fieldLabel = constValue[field].toString(),
           encoder = summonEncoder[tpe]
         ) +: summmonAllDefs[T, fields, types]

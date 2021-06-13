@@ -24,7 +24,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 import io.circe.generic.semiauto._
 
-enum TestModelWithDefaults derives JsonTaggedAdt.Encoder {
+enum TestModelWithDefaults derives JsonTaggedAdt.Encoder, JsonTaggedAdt.Decoder {
   case Event1
   case Event2( f1: String )
 }
@@ -35,7 +35,7 @@ given adtConfig: JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Confi
   }
 )
 
-enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig {
+enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.DecoderWithConfig {
   case Event1
   case Event2( f1: String )
 }
@@ -55,9 +55,7 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   it should "be able to deserialise ADTs with default config" in {
-    implicit val decoder: Decoder[TestModelWithDefaults] = ???
-
-    val testJson = """{"type" : "ev2", "f1" : "test-data"}"""
+    val testJson = """{"type" : "Event2", "f1" : "test-data"}"""
 
     decode[TestModelWithDefaults](
       testJson
@@ -75,5 +73,16 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
     assert( json.contains( """"type":"ev1"""" ) )
   }
 
+  it should "be able to deserialise ADTs with specified config" in {
+    val testJson = """{"type" : "ev1", "f1" : "test-data"}"""
+
+    decode[TestModelWithConfig](
+      testJson
+    ) match {
+      case Right( model: TestModelWithConfig ) =>
+        assert( model === TestModelWithConfig.Event1 )
+      case Left( ex ) => fail( ex )
+    }
+  }
 
 }

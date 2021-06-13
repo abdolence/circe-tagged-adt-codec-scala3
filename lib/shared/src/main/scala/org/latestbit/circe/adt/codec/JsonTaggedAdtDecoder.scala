@@ -16,29 +16,88 @@
 
 package org.latestbit.circe.adt.codec
 
-import io.circe._
+import io.circe.*
+import scala.deriving.*
+import scala.compiletime.*
 
-/**
- * Auxiliary JSON object to ADT case classes converter
- *
- * @tparam T
- *   A trait type
- */
-trait JsonTaggedAdtDecoder[T] {
+sealed trait JsonTaggedAdtDecoder[T] extends Decoder[T]
+sealed trait JsonTaggedAdtDecoderWithConfig[T] extends JsonTaggedAdtDecoder[T]
 
-  /**
-   * Convert a current JSON context specified with a cursor and a JSON type field value to suitable
-   * case class instance
-   * @param jsonTypeFieldValue
-   *   a JSON type field value
-   * @param cursor
-   *   JSON decoding cursor
-   * @return
-   *   decoding result of the instance of a case class, accordingly to a jsonTypeFieldValue and a
-   *   trait type
-   */
-  def fromJsonObject(
-      jsonTypeFieldValue: String,
-      cursor: ACursor
-  ): Decoder.Result[T]
+object JsonTaggedAdtDecoder {
+
+  class JsonAdtFieldDef[T](val decoder: Decoder[T]) {
+    def fromJsonObject( cursor: HCursor ): Decoder.Result[T] = decoder(cursor)
+  }
+
+  private inline final def summonDecoder[A]: Decoder[A] = summonFrom {
+    case decoderA: Decoder[A] => decoderA
+    case _: Mirror.Of[A] => Decoder.derived[A]
+  }
+
+  private inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple]: Map[String, JsonAdtFieldDef[_]] = {
+    inline erasedValue[(Fields, Types)] match {
+      case (_: (field *: fields), _: (tpe *: types)) =>
+        val fieldLabel = constValue[field].toString()
+        summmonAllDefs[T, fields, types] + (
+          fieldLabel -> JsonAdtFieldDef[tpe](
+            decoder = summonDecoder[tpe]
+          )
+        )
+      case _ => Map.empty
+    }
+  }
+
+  private inline def createJsonTaggedAdtDecoder[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtDecoder[T] = {
+    lazy val allDefs: Map[String, JsonAdtFieldDef[_]] = summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
+    val stringDecoder: Decoder[Option[String]] = summonDecoder[Option[String]]
+
+    inline m match {
+      case sumOfT: Mirror.SumOf[T] => new JsonTaggedAdtDecoder[T] {
+
+        override def apply(cursor: HCursor): Decoder.Result[T] = {
+          cursor.get[Option[String]](adtConfig.typeFieldName)(using stringDecoder).flatMap {
+            case Some(typeFieldValue: String) => {
+              allDefs.get(typeFieldValue) match {
+                case Some(caseClassDef) => {
+                  caseClassDef.fromJsonObject(cursor).map(_.asInstanceOf[T])
+                }
+                case _ =>
+                  Decoder.failedWithMessage[T](
+                    s"Received unknown type: '${typeFieldValue}'. Exists only types: ${allDefs.keys.mkString(", ")}."
+                  )(cursor)
+              }
+            }
+            case _ =>
+              Decoder.failedWithMessage[T](
+                s"'${adtConfig.typeFieldName}' isn't specified in json."
+              )(cursor)
+          }
+        }
+      }
+
+      case productOfT: Mirror.ProductOf[T] =>
+          new JsonTaggedAdtDecoder[T] {
+            override def apply(c: HCursor): Decoder.Result[T] = {
+              ???
+            }
+          }
+    }
+  }
+
+  implicit inline given derived[T](using m: Mirror.Of[T],
+                                   adtConfig: JsonTaggedAdt.Config[T] =
+                                   JsonTaggedAdt.Config.empty[T]): JsonTaggedAdtDecoder[T] =
+    createJsonTaggedAdtDecoder[T]
+
+}
+
+object JsonTaggedAdtDecoderWithConfig {
+
+  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtDecoderWithConfig[T] = {
+    val parent = JsonTaggedAdtDecoder.derived[T]
+    new JsonTaggedAdtDecoderWithConfig[T] {
+      override def apply(c: HCursor): Decoder.Result[T] = parent.apply(c)
+    }
+  }
+
 }
