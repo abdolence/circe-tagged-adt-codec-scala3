@@ -16,46 +16,59 @@
 
 package org.latestbit.circe.adt.codec.tests
 
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
-import org.latestbit.circe.adt.codec._
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import org.latestbit.circe.adt.codec.*
 import org.scalatest.flatspec.AnyFlatSpec
 
-object TestModels {
+import io.circe.generic.semiauto._
 
-  enum TestEvent {
-    case Event1
-    case Event2( f1: String )
+enum TestModelWithDefaults derives JsonTaggedAdtEncoder {
+  case Event1
+  case Event2( f1: String )
+}
+
+given adtConfig: JsonTaggedAdtEncoder.Config[TestModelWithConfig] = JsonTaggedAdtEncoder.Config[TestModelWithConfig] (
+  toTag = {
+    case TestModelWithConfig.Event1 => "ev1"
   }
+)
 
+enum TestModelWithConfig derives JsonTaggedAdtEncoderWithConfig {
+  case Event1
+  case Event2( f1: String )
 }
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
-  import TestModels._
 
-  "A codec" should "be able to serialise case classes correctly" in {
+  "JsonTaggedAdtCodec" should "be able to serialise ADTs correctly with default config" in {
+    val testModel: TestModelWithDefaults = TestModelWithDefaults.Event1
+    val json: String = testModel.asJson.dropNullValues.noSpaces
 
-    implicit val encoder: Encoder[TestEvent] = ???
+    assert( json.contains( """"type":"Event1"""" ) )
+  }
 
-    val testEvent: TestEvent = TestEvent.Event1
-    val json: String = testEvent.asJson.dropNullValues.noSpaces
+  it should "be able to deserialise ADTs with default config" in {
+    implicit val decoder: Decoder[TestModelWithDefaults] = ???
+
+    val testJson = """{"type" : "ev2", "f1" : "test-data"}"""
+
+    decode[TestModelWithDefaults](
+      testJson
+    ) match {
+      case Right( model: TestModelWithDefaults ) =>
+        assert( model === TestModelWithDefaults.Event2( "test-data" ) )
+      case Left( ex ) => fail( ex )
+    }
+  }
+
+  it should "be able to serialise ADTs correctly with specified config" in {
+    val testModel: TestModelWithConfig = TestModelWithConfig.Event1
+    val json: String = testModel.asJson.dropNullValues.noSpaces
 
     assert( json.contains( """"type":"ev1"""" ) )
   }
 
-  it should "be able to deserialise case classes" in {
-    implicit val decoder: Decoder[TestEvent] = ???
-
-    val testJson = """{"type" : "ev2", "f1" : "test-data"}"""
-
-    decode[TestEvent](
-      testJson
-    ) match {
-      case Right( model: TestEvent ) =>
-        assert( model === TestEvent.Event2( "test-data" ) )
-      case Left( ex ) => fail( ex )
-    }
-  }
 
 }

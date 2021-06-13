@@ -16,7 +16,9 @@
 
 package org.latestbit.circe.adt.codec
 
-import io.circe._
+import io.circe.*
+import scala.deriving.*
+import scala.compiletime.*
 
 /**
  * Auxiliary ADT case classes to JSON object converter
@@ -24,15 +26,94 @@ import io.circe._
  * @tparam T
  *   A trait type
  */
-trait JsonTaggedAdtEncoder[T] {
+sealed trait JsonTaggedAdtEncoder[T] extends Encoder.AsObject[T] {
+  def tagFor(obj: T): String
+}
 
-  /**
-   * Convert a trait to circe JsonObject
-   * @param obj
-   *   an instance of T
-   * @return
-   *   Encoded JSON object and its JSON type field value
-   */
-  def toJsonObject( obj: T ): ( JsonObject, String )
+sealed trait JsonTaggedAdtEncoderWithConfig[T] extends JsonTaggedAdtEncoder[T]
+
+object JsonTaggedAdtEncoder {
+
+  final val DefaultTypeFieldName: String = "type"
+  type TagMappingFunction[E] = PartialFunction[E,String]
+
+  case class Config[E]( typeFieldName: String = DefaultTypeFieldName,
+                        toTag: TagMappingFunction[E] = PartialFunction.empty)
+
+  object Config {
+    inline final def empty[E] = Config[E]()
+  }
+
+  class JsonAdtFieldDef[T](val fieldLabel: String, val encoder: Encoder.AsObject[T]) {
+    inline def toJsonObject( obj: T ): JsonObject = encoder.encodeObject(obj)
+  }
+
+  private inline final def summonEncoder[A]: Encoder.AsObject[A] = summonFrom {
+    case encodeA: Encoder.AsObject[A] => encodeA
+    case _: Mirror.Of[A] => Encoder.AsObject.derived[A]
+  }
+
+  private inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple]: Vector[JsonAdtFieldDef[_]] = {
+    inline erasedValue[(Fields, Types)] match {
+      case (_: (field *: fields), _: (tpe *: types)) =>
+        new JsonAdtFieldDef[tpe](
+          fieldLabel = constValue[field].toString(),
+          encoder = summonEncoder[tpe]
+        ) +: summmonAllDefs[T, fields, types]
+      case _ => Vector.empty
+    }
+  }
+
+  private inline def createJsonTaggedAdtEncoder[T](using m: Mirror.Of[T], adtConfig: Config[T]): JsonTaggedAdtEncoder[T] = {
+    lazy val allDefs: Vector[JsonAdtFieldDef[_]] = summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
+
+    inline m match {
+      case sumOfT: Mirror.SumOf[T] => new JsonTaggedAdtEncoder[T] {
+        override def encodeObject(obj: T): JsonObject = {
+          val caseClassIdx = sumOfT.ordinal(obj)
+          val caseClassDef = allDefs(caseClassIdx).asInstanceOf[JsonAdtFieldDef[T]]
+          val caseClassTag = adtConfig.toTag.lift(obj).getOrElse(caseClassDef.fieldLabel)
+          val srcJsonObj: JsonObject = caseClassDef.toJsonObject(obj)
+          srcJsonObj.add(
+            adtConfig.typeFieldName,
+            Json.fromString( caseClassTag )
+          )
+        }
+
+        override def tagFor(obj: T): String = {
+          val caseClassIdx = sumOfT.ordinal(obj)
+          val caseClassDef = allDefs(caseClassIdx).asInstanceOf[JsonAdtFieldDef[T]]
+          adtConfig.toTag.lift(obj).getOrElse(caseClassDef.fieldLabel)
+        }
+      }
+
+      case productOfT: Mirror.ProductOf[T] => new JsonTaggedAdtEncoder[T] {
+        override def encodeObject(obj: T): JsonObject = {
+          ???
+        }
+
+        override def tagFor(obj: T): String = {
+          ???
+        }
+      }
+    }
+  }
+
+  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: Config[T] = Config.empty[T]): JsonTaggedAdtEncoder[T] = createJsonTaggedAdtEncoder[T]
+
+}
+
+object JsonTaggedAdtEncoderWithConfig {
+  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdtEncoder.Config[T]): JsonTaggedAdtEncoderWithConfig[T] = {
+    val parent = JsonTaggedAdtEncoder.derived[T]
+    new JsonTaggedAdtEncoderWithConfig[T] {
+      override def encodeObject(obj: T): JsonObject = {
+        parent.encodeObject(obj)
+      }
+      override def tagFor(obj: T): String = {
+        parent.tagFor(obj)
+      }
+    }
+  }
 
 }
