@@ -20,6 +20,7 @@ import org.latestbit.circe.adt.codec.impl.*
 
 import scala.reflect.*
 import scala.deriving.*
+import io.circe.*
 
 object JsonTaggedAdt {
 
@@ -32,7 +33,9 @@ object JsonTaggedAdt {
   final val DefaultTypeFieldName: String = "type"
 
   class Config[E]( val typeFieldName: String = DefaultTypeFieldName,
-                   val mappings: Map[String, TagClass[E]] = Map())
+                   val mappings: Map[String, TagClass[E]] = Map(),
+                   val encoderDefinition: EncoderDefinition = EncoderDefinition.Default
+                 )
 
   object Config {
     inline final def empty[E] = Config[E]()
@@ -40,6 +43,37 @@ object JsonTaggedAdt {
 
   class TagClass[+E](using clsTag: ClassTag[E]) {
     lazy val tagClassName = clsTag.runtimeClass.getName
+  }
+
+  /**
+   * Defines encoding implementation using encoded json object, a tag value, and field name
+   */
+  trait EncoderDefinition {
+    def encodeTaggedJsonObject(typeFieldName: String,
+                               tagValue: String,
+                               tagJsonObject: JsonObject): JsonObject
+  }
+
+  object EncoderDefinition {
+    /**
+     * Default implementation of encoding JSON with a type field for:
+     * ```
+     * {
+     *  'type': 'tagValue',
+     *   ...
+     * }
+     * ```
+     */
+    object Default extends EncoderDefinition {
+      override def encodeTaggedJsonObject(typeFieldName: String,
+                                 tagValue: String,
+                                 tagJsonObject: JsonObject): JsonObject = {
+        tagJsonObject.add(
+          typeFieldName,
+          Json.fromString( tagValue )
+        )
+      }
+    }
   }
 
 }

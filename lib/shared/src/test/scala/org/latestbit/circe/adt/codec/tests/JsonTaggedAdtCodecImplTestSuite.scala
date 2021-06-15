@@ -29,17 +29,17 @@ enum TestModelWithDefaults derives JsonTaggedAdt.Encoder, JsonTaggedAdt.Decoder 
   case Event2( f1: String )
 }
 
+enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.DecoderWithConfig {
+  case Event1
+  case Event2( f1: String )
+}
+
 given adtConfig: JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config[TestModelWithConfig] (
   mappings = Map(
     "ev1" -> JsonTaggedAdt.TagClass[TestModelWithConfig.Event1.type],
     "ev2" -> JsonTaggedAdt.TagClass[TestModelWithConfig.Event2]
   )
 )
-
-enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.DecoderWithConfig {
-  case Event1
-  case Event2( f1: String )
-}
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 

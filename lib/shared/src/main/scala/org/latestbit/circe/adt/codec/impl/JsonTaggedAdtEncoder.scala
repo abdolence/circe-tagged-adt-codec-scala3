@@ -69,9 +69,10 @@ object JsonTaggedAdtEncoder {
           val caseClassIdx = sumOfT.ordinal(obj)
           val caseClassDef = allDefs(caseClassIdx).asInstanceOf[JsonAdtFieldDef[T]]
           val srcJsonObj: JsonObject = caseClassDef.toJsonObject(obj)
-          srcJsonObj.add(
+          adtConfig.encoderDefinition.encodeTaggedJsonObject(
             adtConfig.typeFieldName,
-            Json.fromString( caseClassDef.tagValue )
+            caseClassDef.tagValue,
+            srcJsonObj
           )
         }
 
