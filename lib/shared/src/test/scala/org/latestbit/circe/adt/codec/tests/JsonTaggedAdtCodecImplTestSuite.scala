@@ -41,6 +41,12 @@ given adtConfig: JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Confi
   )
 )
 
+enum TestModelPure derives JsonTaggedAdt.PureEncoder, JsonTaggedAdt.PureDecoder {
+  case Event1
+  case Event2
+}
+
+
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
   "JsonTaggedAdtCodec" should "be able to serialise ADTs correctly with default config" in {
@@ -85,5 +91,34 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
       case Left( ex ) => fail( ex )
     }
   }
+
+  "JsonPureTaggedCodec" should "be able to serialise to Json correctly" in {
+    val testModel1: TestModelPure = TestModelPure.Event1
+    val json1: String = testModel1.asJson.dropNullValues.noSpaces
+
+    val testModel2: TestModelWithDefaults = TestModelWithDefaults.Event2("test-val")
+    val json2: String = testModel2.asJson.dropNullValues.noSpaces
+
+    json1 === "Event1"
+    json2 === "Event2"
+  }
+
+  it should "be able to deserialise from Json correctly" in {
+    val testJson = "Event2"
+    decode[TestModelPure](
+      testJson
+    ).toTry.get
+    decode[TestModelPure](
+      testJson
+    ) match {
+      case Right( model: TestModelPure ) =>
+        assert( model === TestModelPure.Event2 )
+      case Left( ex ) => {
+        ex.printStackTrace()
+        fail( ex )
+      }
+    }
+  }
+
 
 }

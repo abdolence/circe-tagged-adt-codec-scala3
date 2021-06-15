@@ -22,11 +22,9 @@ import org.latestbit.circe.adt.codec.*
 import scala.compiletime.*
 import scala.deriving.*
 
-sealed trait JsonTaggedAdtEncoder[T] extends Encoder.AsObject[T] {
-  def tagFor(obj: T): String
-}
-
+sealed trait JsonTaggedAdtEncoder[T] extends Encoder.AsObject[T]
 sealed trait JsonTaggedAdtEncoderWithConfig[T] extends JsonTaggedAdtEncoder[T]
+sealed trait JsonPureTaggedAdtEncoder[T] extends Encoder[T]
 
 object JsonTaggedAdtEncoder {
 
@@ -35,12 +33,12 @@ object JsonTaggedAdtEncoder {
     def toJsonObject( obj: T ): JsonObject = encoder.encodeObject(obj)
   }
 
-  private inline final def summonEncoder[T]: Encoder.AsObject[T] = summonFrom {
+  inline final def summonEncoder[T]: Encoder.AsObject[T] = summonFrom {
     case encodeA: Encoder.AsObject[T] => encodeA
     case _: Mirror.Of[T] => Encoder.AsObject.derived[T]
   }
 
-  private inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using adtConfig: JsonTaggedAdt.Config[T]): Vector[JsonAdtFieldDef[_]] = {
+  inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using adtConfig: JsonTaggedAdt.Config[T]): Vector[JsonAdtFieldDef[_]] = {
     inline erasedValue[(Fields, Types)] match {
       case (_: (field *: fields), _: (tpe *: types)) => {
         val tagClassName = TagMacro.tagClassName[tpe]()
@@ -60,7 +58,7 @@ object JsonTaggedAdtEncoder {
     }
   }
 
-  private inline def createJsonTaggedAdtEncoder[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtEncoder[T] = {
+  inline def createJsonTaggedAdtEncoder[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtEncoder[T] = {
     lazy val allDefs: Vector[JsonAdtFieldDef[_]] = summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
 
     inline m match {
@@ -75,21 +73,11 @@ object JsonTaggedAdtEncoder {
             srcJsonObj
           )
         }
-
-        override def tagFor(obj: T): String = {
-          val caseClassIdx = sumOfT.ordinal(obj)
-          val caseClassDef = allDefs(caseClassIdx)
-          caseClassDef.tagValue
-        }
       }
 
       case productOfT: Mirror.ProductOf[T] => new JsonTaggedAdtEncoder[T] {
         override def encodeObject(obj: T): JsonObject = {
-          ???
-        }
-
-        override def tagFor(obj: T): String = {
-          ???
+          scala.compiletime.error("This codec implementation for Scala 3 doesn't support deriving anything except enums")
         }
       }
     }
@@ -110,8 +98,30 @@ object JsonTaggedAdtEncoderWithConfig {
       override def encodeObject(obj: T): JsonObject = {
         parent.encodeObject(obj)
       }
-      override def tagFor(obj: T): String = {
-        parent.tagFor(obj)
+    }
+  }
+
+}
+
+object JsonPureTaggedAdtEncoder {
+
+  implicit inline given derived[T](using m: Mirror.Of[T]): JsonPureTaggedAdtEncoder[T] = {
+    given adtConfig: JsonTaggedAdt.Config[T] = JsonTaggedAdt.Config.empty[T]
+    lazy val allDefs: Vector[JsonTaggedAdtEncoder.JsonAdtFieldDef[_]] = JsonTaggedAdtEncoder.summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
+
+    inline m match {
+      case sumOfT: Mirror.SumOf[T] => new JsonPureTaggedAdtEncoder[T] {
+        override def apply(obj: T): Json = {
+          val caseClassIdx = sumOfT.ordinal(obj)
+          val caseClassDef = allDefs(caseClassIdx)
+          Json.fromString(caseClassDef.tagValue)
+        }
+      }
+
+      case productOfT: Mirror.ProductOf[T] => new JsonPureTaggedAdtEncoder[T] {
+        override def apply(obj: T): Json = {
+          scala.compiletime.error("This codec implementation for Scala 3 doesn't support deriving anything except enums")
+        }
       }
     }
   }

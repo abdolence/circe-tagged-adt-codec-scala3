@@ -26,9 +26,11 @@ object JsonTaggedAdt {
 
   type Encoder[T] = impl.JsonTaggedAdtEncoder[T]
   type EncoderWithConfig[T] = impl.JsonTaggedAdtEncoderWithConfig[T]
+  type PureEncoder[T] = impl.JsonPureTaggedAdtEncoder[T]
 
   type Decoder[T] = impl.JsonTaggedAdtDecoder[T]
   type DecoderWithConfig[T] = impl.JsonTaggedAdtDecoderWithConfig[T]
+  type PureDecoder[T] = impl.JsonPureTaggedAdtDecoder[T]
 
   final val DefaultTypeFieldName: String = "type"
 
