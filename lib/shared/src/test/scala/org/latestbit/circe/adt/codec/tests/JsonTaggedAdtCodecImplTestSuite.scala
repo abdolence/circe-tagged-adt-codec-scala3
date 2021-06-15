@@ -30,6 +30,10 @@ enum TestModelWithDefaults derives JsonTaggedAdt.Encoder, JsonTaggedAdt.Decoder 
 }
 
 given adtConfig: JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config[TestModelWithConfig] (
+  mappings = Map(
+    "ev1" -> JsonTaggedAdt.TagClass[TestModelWithConfig.Event1.type],
+    "ev2" -> JsonTaggedAdt.TagClass[TestModelWithConfig.Event2]
+  ),
   toTag = {
     case TestModelWithConfig.Event1 => "ev1"
   }

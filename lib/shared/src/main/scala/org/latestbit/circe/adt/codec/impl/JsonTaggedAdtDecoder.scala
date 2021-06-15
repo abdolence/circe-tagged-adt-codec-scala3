@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package org.latestbit.circe.adt.codec
+package org.latestbit.circe.adt.codec.impl
 
 import io.circe.*
-import scala.deriving.*
+import org.latestbit.circe.adt.codec.*
+
 import scala.compiletime.*
+import scala.deriving.*
 
 sealed trait JsonTaggedAdtDecoder[T] extends Decoder[T]
 sealed trait JsonTaggedAdtDecoderWithConfig[T] extends JsonTaggedAdtDecoder[T]

@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package org.latestbit.circe.adt.codec
+package org.latestbit.circe.adt.codec.impl
 
 import io.circe.*
-import scala.deriving.*
+import org.latestbit.circe.adt.codec.*
+
 import scala.compiletime.*
+import scala.deriving.*
 
 sealed trait JsonTaggedAdtEncoder[T] extends Encoder.AsObject[T] {
   def tagFor(obj: T): String
@@ -28,7 +30,8 @@ sealed trait JsonTaggedAdtEncoderWithConfig[T] extends JsonTaggedAdtEncoder[T]
 
 object JsonTaggedAdtEncoder {
 
-  class JsonAdtFieldDef[T](val fieldLabel: String, val encoder: Encoder.AsObject[T]) {
+  class JsonAdtFieldDef[T](val fieldLabel: String,
+                           val encoder: Encoder.AsObject[T]) {
     def toJsonObject( obj: T ): JsonObject = encoder.encodeObject(obj)
   }
 
@@ -37,13 +40,17 @@ object JsonTaggedAdtEncoder {
     case _: Mirror.Of[T] => Encoder.AsObject.derived[T]
   }
 
-  private inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple]: Vector[JsonAdtFieldDef[_]] = {
+  private inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using adtConfig: JsonTaggedAdt.Config[T]): Vector[JsonAdtFieldDef[_]] = {
     inline erasedValue[(Fields, Types)] match {
-      case (_: (field *: fields), _: (tpe *: types)) =>
+      case (_: (field *: fields), _: (tpe *: types)) => {
+        val tagParameterClassName: String = TagMacro.tagParameterType[tpe]()
+        println(adtConfig.mappings.values.map(_.tagClassName).mkString("\n"))
+        println(tagParameterClassName)
         JsonAdtFieldDef[tpe](
           fieldLabel = constValue[field].toString(),
           encoder = summonEncoder[tpe]
         ) +: summmonAllDefs[T, fields, types]
+      }
       case _ => Vector.empty
     }
   }

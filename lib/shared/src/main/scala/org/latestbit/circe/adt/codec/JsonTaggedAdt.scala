@@ -16,11 +16,23 @@
 
 package org.latestbit.circe.adt.codec
 
+import org.latestbit.circe.adt.codec.impl.*
+
+import scala.reflect.*
+import scala.deriving.*
+
 object JsonTaggedAdt {
+
+  type Encoder[T] = impl.JsonTaggedAdtEncoder[T]
+  type EncoderWithConfig[T] = impl.JsonTaggedAdtEncoderWithConfig[T]
+
+  type Decoder[T] = impl.JsonTaggedAdtDecoder[T]
+  type DecoderWithConfig[T] = impl.JsonTaggedAdtDecoderWithConfig[T]
 
   final val DefaultTypeFieldName: String = "type"
 
   case class Config[E]( typeFieldName: String = DefaultTypeFieldName,
+                        mappings: Map[String, TagClass[E]] = Map(),
                         toTag: PartialFunction[E,String] = PartialFunction.empty,
                         fromTag: PartialFunction[String,E] = PartialFunction.empty)
 
@@ -28,11 +40,8 @@ object JsonTaggedAdt {
     inline final def empty[E] = Config[E]()
   }
 
-  type Encoder[T] = JsonTaggedAdtEncoder[T]
-  type EncoderWithConfig[T] = JsonTaggedAdtEncoderWithConfig[T]
+  class TagClass[+E](using clsTag: ClassTag[E]) {
+    lazy val tagClassName = clsTag.runtimeClass.getName
+  }
 
-  type Decoder[T] = JsonTaggedAdtDecoder[T]
-  type DecoderWithConfig[T] = JsonTaggedAdtDecoderWithConfig[T]
-
-  type Codec[T] = Encoder[T] with Decoder[T]
 }
