@@ -30,7 +30,7 @@ sealed trait JsonTaggedAdtEncoderWithConfig[T] extends JsonTaggedAdtEncoder[T]
 
 object JsonTaggedAdtEncoder {
 
-  class JsonAdtFieldDef[T](val fieldLabel: String,
+  class JsonAdtFieldDef[T](val tagValue: String,
                            val encoder: Encoder.AsObject[T],
                            val tagClassName: String) {
     def toJsonObject( obj: T ): JsonObject = encoder.encodeObject(obj)
@@ -44,9 +44,9 @@ object JsonTaggedAdtEncoder {
   private inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using adtConfig: JsonTaggedAdt.Config[T]): Vector[JsonAdtFieldDef[_]] = {
     inline erasedValue[(Fields, Types)] match {
       case (_: (field *: fields), _: (tpe *: types)) => {
-        val fieldLabel = constValue[field].toString()
+        val tagValue = constValue[field].toString()
         JsonAdtFieldDef[tpe](
-          fieldLabel = fieldLabel,
+          tagValue = tagValue,
           encoder = summonEncoder[tpe],
           tagClassName = TagMacro.tagClassName[tpe]()
         ) +: summmonAllDefs[T, fields, types]
@@ -63,18 +63,18 @@ object JsonTaggedAdtEncoder {
         override def encodeObject(obj: T): JsonObject = {
           val caseClassIdx = sumOfT.ordinal(obj)
           val caseClassDef = allDefs(caseClassIdx).asInstanceOf[JsonAdtFieldDef[T]]
-          val caseClassTag = adtConfig.toTag.lift(obj).getOrElse(caseClassDef.fieldLabel)
+          val tagValue = adtConfig.toTag.lift(obj).getOrElse(caseClassDef.tagValue)
           val srcJsonObj: JsonObject = caseClassDef.toJsonObject(obj)
           srcJsonObj.add(
             adtConfig.typeFieldName,
-            Json.fromString( caseClassTag )
+            Json.fromString( tagValue )
           )
         }
 
         override def tagFor(obj: T): String = {
           val caseClassIdx = sumOfT.ordinal(obj)
           val caseClassDef = allDefs(caseClassIdx).asInstanceOf[JsonAdtFieldDef[T]]
-          adtConfig.toTag.lift(obj).getOrElse(caseClassDef.fieldLabel)
+          adtConfig.toTag.lift(obj).getOrElse(caseClassDef.tagValue)
         }
       }
 
