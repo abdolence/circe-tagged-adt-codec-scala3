@@ -31,8 +31,7 @@ sealed trait JsonTaggedAdtEncoderWithConfig[T] extends JsonTaggedAdtEncoder[T]
 object JsonTaggedAdtEncoder {
 
   class JsonAdtFieldDef[T](val tagValue: String,
-                           val encoder: Encoder.AsObject[T],
-                           val tagClassName: String) {
+                           val encoder: Encoder.AsObject[T]) {
     def toJsonObject( obj: T ): JsonObject = encoder.encodeObject(obj)
   }
 
@@ -44,11 +43,17 @@ object JsonTaggedAdtEncoder {
   private inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using adtConfig: JsonTaggedAdt.Config[T]): Vector[JsonAdtFieldDef[_]] = {
     inline erasedValue[(Fields, Types)] match {
       case (_: (field *: fields), _: (tpe *: types)) => {
-        val tagValue = constValue[field].toString()
+        val tagClassName = TagMacro.tagClassName[tpe]()
+
+        val tagValue: String = adtConfig.mappings
+          .find(_._2.tagClassName == tagClassName)
+          .map(_._1)
+          .getOrElse(
+            constValue[field].toString()
+          )
         JsonAdtFieldDef[tpe](
           tagValue = tagValue,
-          encoder = summonEncoder[tpe],
-          tagClassName = TagMacro.tagClassName[tpe]()
+          encoder = summonEncoder[tpe]
         ) +: summmonAllDefs[T, fields, types]
       }
       case _ => Vector.empty
@@ -63,18 +68,17 @@ object JsonTaggedAdtEncoder {
         override def encodeObject(obj: T): JsonObject = {
           val caseClassIdx = sumOfT.ordinal(obj)
           val caseClassDef = allDefs(caseClassIdx).asInstanceOf[JsonAdtFieldDef[T]]
-          val tagValue = adtConfig.toTag.lift(obj).getOrElse(caseClassDef.tagValue)
           val srcJsonObj: JsonObject = caseClassDef.toJsonObject(obj)
           srcJsonObj.add(
             adtConfig.typeFieldName,
-            Json.fromString( tagValue )
+            Json.fromString( caseClassDef.tagValue )
           )
         }
 
         override def tagFor(obj: T): String = {
           val caseClassIdx = sumOfT.ordinal(obj)
-          val caseClassDef = allDefs(caseClassIdx).asInstanceOf[JsonAdtFieldDef[T]]
-          adtConfig.toTag.lift(obj).getOrElse(caseClassDef.tagValue)
+          val caseClassDef = allDefs(caseClassIdx)
+          caseClassDef.tagValue
         }
       }
 

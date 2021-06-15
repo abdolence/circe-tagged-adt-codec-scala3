@@ -32,9 +32,7 @@ object JsonTaggedAdt {
   final val DefaultTypeFieldName: String = "type"
 
   case class Config[E]( typeFieldName: String = DefaultTypeFieldName,
-                        mappings: Map[String, TagClass[E]] = Map(),
-                        toTag: PartialFunction[E,String] = PartialFunction.empty,
-                        fromTag: PartialFunction[String,E] = PartialFunction.empty)
+                        mappings: Map[String, TagClass[E]] = Map())
 
   object Config {
     inline final def empty[E] = Config[E]()

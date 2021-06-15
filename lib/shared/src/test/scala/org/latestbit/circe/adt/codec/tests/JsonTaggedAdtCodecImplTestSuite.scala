@@ -33,10 +33,7 @@ given adtConfig: JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Confi
   mappings = Map(
     "ev1" -> JsonTaggedAdt.TagClass[TestModelWithConfig.Event1.type],
     "ev2" -> JsonTaggedAdt.TagClass[TestModelWithConfig.Event2]
-  ),
-  toTag = {
-    case TestModelWithConfig.Event1 => "ev1"
-  }
+  )
 )
 
 enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.DecoderWithConfig {

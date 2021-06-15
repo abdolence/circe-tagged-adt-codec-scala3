@@ -27,8 +27,7 @@ sealed trait JsonTaggedAdtDecoderWithConfig[T] extends JsonTaggedAdtDecoder[T]
 
 object JsonTaggedAdtDecoder {
 
-  class JsonAdtFieldDef[T](val tagClassName: String,
-                           val decoder: Decoder[T]) {
+  class JsonAdtFieldDef[T](val decoder: Decoder[T]) {
     def fromJsonObject( cursor: HCursor ): Decoder.Result[T] = decoder(cursor)
   }
 
@@ -37,13 +36,18 @@ object JsonTaggedAdtDecoder {
     case _: Mirror.Of[A] => Decoder.derived[A]
   }
 
-  private inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple]: Map[String, JsonAdtFieldDef[_]] = {
+  private inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using adtConfig: JsonTaggedAdt.Config[T]): Map[String, JsonAdtFieldDef[_]] = {
     inline erasedValue[(Fields, Types)] match {
       case (_: (field *: fields), _: (tpe *: types)) =>
-        val tagValue = constValue[field].toString()
+        val tagClassName = TagMacro.tagClassName[tpe]()
+        val tagValue: String = adtConfig.mappings
+          .find(_._2.tagClassName == tagClassName)
+          .map(_._1)
+          .getOrElse(
+            constValue[field].toString()
+          )
         summmonAllDefs[T, fields, types] + (
           tagValue -> JsonAdtFieldDef[tpe](
-            tagClassName = TagMacro.tagClassName[tpe](),
             decoder = summonDecoder[tpe]
           )
         )
