@@ -57,28 +57,24 @@ object JsonTaggedAdtDecoder {
 
   private inline def createJsonTaggedAdtDecoder[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtDecoder[T] = {
     lazy val allDefs: Map[String, JsonAdtFieldDef[_]] = summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
-    val stringDecoder: Decoder[Option[String]] = summonDecoder[Option[String]]
 
     inline m match {
       case sumOfT: Mirror.SumOf[T] => new JsonTaggedAdtDecoder[T] {
 
         override def apply(cursor: HCursor): Decoder.Result[T] = {
-          cursor.get[Option[String]](adtConfig.typeFieldName)(using stringDecoder).flatMap {
-            case Some(typeFieldValue: String) => {
-              allDefs.get(typeFieldValue) match {
-                case Some(caseClassDef) => {
-                  caseClassDef.fromJsonObject(cursor).map(_.asInstanceOf[T])
-                }
-                case _ =>
-                  Decoder.failedWithMessage[T](
-                    s"Received unknown type: '${typeFieldValue}'. Exists only types: ${allDefs.keys.mkString(", ")}."
-                  )(cursor)
+          adtConfig.decoderDefinition.decodeTaggedJsonObject(
+            cursor,
+            adtConfig.typeFieldName
+          ).flatMap { case ((tagValue, cursor)) =>
+            allDefs.get(tagValue) match {
+              case Some(caseClassDef) => {
+                caseClassDef.fromJsonObject(cursor).map(_.asInstanceOf[T])
               }
+              case _ =>
+                Decoder.failedWithMessage[T](
+                  s"Received unknown type: '${tagValue}'. Exists only types: ${allDefs.keys.mkString(", ")}."
+                )(cursor)
             }
-            case _ =>
-              Decoder.failedWithMessage[T](
-                s"'${adtConfig.typeFieldName}' isn't specified in json."
-              )(cursor)
           }
         }
       }

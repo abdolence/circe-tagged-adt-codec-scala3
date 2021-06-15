@@ -32,9 +32,13 @@ object JsonTaggedAdt {
 
   final val DefaultTypeFieldName: String = "type"
 
+  /**
+   * Configuration for tagged deriving encoder/decoders.
+   */
   class Config[E]( val typeFieldName: String = DefaultTypeFieldName,
                    val mappings: Map[String, TagClass[E]] = Map(),
-                   val encoderDefinition: EncoderDefinition = EncoderDefinition.Default
+                   val encoderDefinition: EncoderDefinition = EncoderDefinition.Default,
+                   val decoderDefinition: DecoderDefinition = DecoderDefinition.Default
                  )
 
   object Config {
@@ -72,6 +76,34 @@ object JsonTaggedAdt {
           typeFieldName,
           Json.fromString( tagValue )
         )
+      }
+    }
+  }
+
+  /**
+   * Defines decoding implementation using encoded json object, a tag value, and field name
+   */
+  trait DecoderDefinition {
+    def decodeTaggedJsonObject(cursor: HCursor,
+                               typeFieldName: String): io.circe.Decoder.Result[(String, HCursor)]
+  }
+
+  object DecoderDefinition {
+    /**
+     * Default implementation of encoding JSON with a type field for:
+     * ```
+     * {
+     *  'type': 'tagValue',
+     *   ...
+     * }
+     * ```
+     */
+    object Default extends DecoderDefinition {
+      def decodeTaggedJsonObject(cursor: HCursor,
+                                 typeFieldName: String): io.circe.Decoder.Result[(String, HCursor)] = {
+        cursor.get[String](typeFieldName).map { tagValue =>
+          (tagValue, cursor)
+        }
       }
     }
   }
