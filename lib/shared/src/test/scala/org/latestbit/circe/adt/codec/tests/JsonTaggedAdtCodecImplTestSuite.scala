@@ -46,6 +46,7 @@ enum TestModelPure derives JsonTaggedAdt.PureEncoder, JsonTaggedAdt.PureDecoder 
   case Event2
 }
 
+case class TestModelWithPure(pure: TestModelPure) derives Encoder.AsObject, Decoder
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
@@ -93,28 +94,25 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
   }
 
   "JsonPureTaggedCodec" should "be able to serialise to Json correctly" in {
-    val testModel1: TestModelPure = TestModelPure.Event1
-    val json1: String = testModel1.asJson.dropNullValues.noSpaces
+    val testModelWithPure = TestModelWithPure(pure = TestModelPure.Event1)
+    val json1: String = testModelWithPure.asJson.dropNullValues.noSpaces
 
-    val testModel2: TestModelWithDefaults = TestModelWithDefaults.Event2("test-val")
-    val json2: String = testModel2.asJson.dropNullValues.noSpaces
+    val testModelWithPure2 = TestModelWithPure(pure = TestModelPure.Event2)
+    val json2: String = testModelWithPure2.asJson.dropNullValues.noSpaces
 
-    json1 === "Event1"
-    json2 === "Event2"
+    assert( json1 contains """"pure":"Event1"""")
+    assert( json2 contains """"pure":"Event2"""")
   }
 
   it should "be able to deserialise from Json correctly" in {
-    val testJson = "Event2"
-    decode[TestModelPure](
-      testJson
-    ).toTry.get
-    decode[TestModelPure](
+    val testJson = """{ "pure" : "Event2" } """
+
+    decode[TestModelWithPure](
       testJson
     ) match {
-      case Right( model: TestModelPure ) =>
-        assert( model === TestModelPure.Event2 )
+      case Right( model: TestModelWithPure ) =>
+        assert( model.pure === TestModelPure.Event2 )
       case Left( ex ) => {
-        ex.printStackTrace()
         fail( ex )
       }
     }
