@@ -51,13 +51,10 @@ object JsonTaggedAdt {
     inline final def empty[E] = Config[E]()
   }
 
-  class TagClass[+E](val tagClassName: String) {
-  }
+  class TagClass[+E](val tagClassName: String)
 
-  object TagClass {
-    inline def create[C](using m: Mirror.Of[C]): TagClass[C] = {
-      TagClass(constValue[m.MirroredLabel].toString())
-    }
+  inline def tagged[C](using m: Mirror.Of[C]): TagClass[C] = {
+    TagClass(constValue[m.MirroredLabel].toString())
   }
 
   /**

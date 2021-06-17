@@ -36,8 +36,8 @@ enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.
 
 given JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config[TestModelWithConfig] (
   mappings = Map(
-    "ev1" -> JsonTaggedAdt.TagClass.create[TestModelWithConfig.Event1.type],
-    "ev2" -> JsonTaggedAdt.TagClass.create[TestModelWithConfig.Event2]
+    "ev1" -> JsonTaggedAdt.tagged[TestModelWithConfig.Event1.type],
+    "ev2" -> JsonTaggedAdt.tagged[TestModelWithConfig.Event2]
   )
 )
 
@@ -55,8 +55,8 @@ enum TestModelPureConfig derives JsonTaggedAdt.PureEncoderWithConfig, JsonTagged
 
 given JsonTaggedAdt.Config[TestModelPureConfig] = JsonTaggedAdt.Config[TestModelPureConfig] (
   mappings = Map(
-    "ev1" -> JsonTaggedAdt.TagClass.create[TestModelPureConfig.Event1.type],
-    "ev2" -> JsonTaggedAdt.TagClass.create[TestModelPureConfig.Event2.type]
+    "ev1" -> JsonTaggedAdt.tagged[TestModelPureConfig.Event1.type],
+    "ev2" -> JsonTaggedAdt.tagged[TestModelPureConfig.Event2.type]
   )
 )
 

@@ -43,7 +43,7 @@ object JsonTaggedAdtEncoder {
   inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using adtConfig: JsonTaggedAdt.Config[T]): Vector[JsonAdtFieldDef[_]] = {
     inline erasedValue[(Fields, Types)] match {
       case (_: (field *: fields), _: (tpe *: types)) => {
-        val tagClassName = JsonTaggedAdt.TagClass.create[tpe](using summonInline[Mirror.Of[tpe]]).tagClassName
+        val tagClassName = JsonTaggedAdt.tagged[tpe](using summonInline[Mirror.Of[tpe]]).tagClassName
         val tagValue: String = adtConfig.mappings
           .find(_._2.tagClassName == tagClassName)
           .map(_._1)
