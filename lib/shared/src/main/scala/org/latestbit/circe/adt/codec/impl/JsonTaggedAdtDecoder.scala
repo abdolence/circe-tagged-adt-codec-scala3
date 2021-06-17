@@ -24,7 +24,9 @@ import scala.deriving.*
 
 sealed trait JsonTaggedAdtDecoder[T] extends Decoder[T]
 sealed trait JsonTaggedAdtDecoderWithConfig[T] extends JsonTaggedAdtDecoder[T]
+
 sealed trait JsonPureTaggedAdtDecoder[T] extends JsonTaggedAdtDecoder[T]
+sealed trait JsonPureTaggedAdtDecoderWithConfig[T] extends JsonPureTaggedAdtDecoder[T]
 
 object JsonTaggedAdtDecoder {
 
@@ -41,7 +43,7 @@ object JsonTaggedAdtDecoder {
   inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using adtConfig: JsonTaggedAdt.Config[T]): Map[String, JsonAdtFieldDef[_]] = {
     inline erasedValue[(Fields, Types)] match {
       case (_: (field *: fields), _: (tpe *: types)) =>
-        val tagClassName = TagMacro.tagClassName[tpe]()
+        val tagClassName = JsonTaggedAdt.TagClass.create[tpe](using summonInline[Mirror.Of[tpe]]).tagClassName
         val tagValue: String = adtConfig.mappings
           .find(_._2.tagClassName == tagClassName)
           .map(_._1)
@@ -110,8 +112,7 @@ object JsonTaggedAdtDecoderWithConfig {
 
 object JsonPureTaggedAdtDecoder {
 
-  implicit inline given derived[T](using m: Mirror.Of[T]): JsonPureTaggedAdtDecoder[T] = {
-    given adtConfig: JsonTaggedAdt.Config[T] = JsonTaggedAdt.Config.empty[T]
+  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T] = JsonTaggedAdt.Config.empty[T]): JsonPureTaggedAdtDecoder[T] = {
     lazy val allDefs: Map[String, JsonTaggedAdtDecoder.JsonAdtFieldDef[_]] = JsonTaggedAdtDecoder.summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
     val stringDecoder: Decoder[String] = JsonTaggedAdtDecoder.summonDecoder[String]
 
@@ -138,6 +139,17 @@ object JsonPureTaggedAdtDecoder {
             scala.compiletime.error("This codec implementation for Scala 3 doesn't support deriving anything except enums")
           }
         }
+    }
+  }
+
+}
+
+object JsonPureTaggedAdtDecoderWithConfig {
+
+  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonPureTaggedAdtDecoderWithConfig[T] = {
+    val parent = JsonPureTaggedAdtDecoder.derived[T]
+    new JsonPureTaggedAdtDecoderWithConfig[T] {
+      override def apply(c: HCursor): Decoder.Result[T] = parent.apply(c)
     }
   }
 

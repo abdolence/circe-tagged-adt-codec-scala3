@@ -20,6 +20,8 @@ import org.latestbit.circe.adt.codec.impl.*
 
 import scala.reflect.*
 import scala.deriving.*
+import scala.compiletime.*
+
 import io.circe.*
 
 object JsonTaggedAdt {
@@ -27,10 +29,12 @@ object JsonTaggedAdt {
   type Encoder[T] = impl.JsonTaggedAdtEncoder[T]
   type EncoderWithConfig[T] = impl.JsonTaggedAdtEncoderWithConfig[T]
   type PureEncoder[T] = impl.JsonPureTaggedAdtEncoder[T]
+  type PureEncoderWithConfig[T] = impl.JsonPureTaggedAdtEncoderWithConfig[T]
 
   type Decoder[T] = impl.JsonTaggedAdtDecoder[T]
   type DecoderWithConfig[T] = impl.JsonTaggedAdtDecoderWithConfig[T]
   type PureDecoder[T] = impl.JsonPureTaggedAdtDecoder[T]
+  type PureDecoderWithConfig[T] = impl.JsonPureTaggedAdtDecoderWithConfig[T]
 
   final val DefaultTypeFieldName: String = "type"
 
@@ -47,8 +51,13 @@ object JsonTaggedAdt {
     inline final def empty[E] = Config[E]()
   }
 
-  class TagClass[+E](using clsTag: ClassTag[E]) {
-    lazy val tagClassName = clsTag.runtimeClass.getName
+  class TagClass[+E](val tagClassName: String) {
+  }
+
+  object TagClass {
+    inline def create[C](using m: Mirror.Of[C]): TagClass[C] = {
+      TagClass(constValue[m.MirroredLabel].toString())
+    }
   }
 
   /**

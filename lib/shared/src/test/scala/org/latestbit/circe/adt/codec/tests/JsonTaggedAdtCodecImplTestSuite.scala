@@ -34,10 +34,10 @@ enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.
   case Event2( f1: String )
 }
 
-given adtConfig: JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config[TestModelWithConfig] (
+given JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config[TestModelWithConfig] (
   mappings = Map(
-    "ev1" -> JsonTaggedAdt.TagClass[TestModelWithConfig.Event1.type],
-    "ev2" -> JsonTaggedAdt.TagClass[TestModelWithConfig.Event2]
+    "ev1" -> JsonTaggedAdt.TagClass.create[TestModelWithConfig.Event1.type],
+    "ev2" -> JsonTaggedAdt.TagClass.create[TestModelWithConfig.Event2]
   )
 )
 
@@ -47,6 +47,20 @@ enum TestModelPure derives JsonTaggedAdt.PureEncoder, JsonTaggedAdt.PureDecoder 
 }
 
 case class TestModelWithPure(pure: TestModelPure) derives Encoder.AsObject, Decoder
+
+enum TestModelPureConfig derives JsonTaggedAdt.PureEncoderWithConfig, JsonTaggedAdt.PureDecoderWithConfig {
+  case Event1
+  case Event2
+}
+
+given JsonTaggedAdt.Config[TestModelPureConfig] = JsonTaggedAdt.Config[TestModelPureConfig] (
+  mappings = Map(
+    "ev1" -> JsonTaggedAdt.TagClass.create[TestModelPureConfig.Event1.type],
+    "ev2" -> JsonTaggedAdt.TagClass.create[TestModelPureConfig.Event2.type]
+  )
+)
+
+case class TestModelWithPureConfig(pure: TestModelPureConfig) derives Encoder.AsObject, Decoder
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
@@ -112,6 +126,31 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
     ) match {
       case Right( model: TestModelWithPure ) =>
         assert( model.pure === TestModelPure.Event2 )
+      case Left( ex ) => {
+        fail( ex )
+      }
+    }
+  }
+
+  it should "be able to serialise to Json correctly with specified config" in {
+    val testModelWithPure = TestModelWithPureConfig(pure = TestModelPureConfig.Event1)
+    val json1: String = testModelWithPure.asJson.dropNullValues.noSpaces
+
+    val testModelWithPure2 = TestModelWithPureConfig(pure = TestModelPureConfig.Event2)
+    val json2: String = testModelWithPure2.asJson.dropNullValues.noSpaces
+
+    assert( json1 contains """"pure":"ev1"""")
+    assert( json2 contains """"pure":"ev2"""")
+  }
+
+  it should "be able to deserialise from Json correctly with specified config" in {
+    val testJson = """{ "pure" : "ev2" } """
+
+    decode[TestModelWithPureConfig](
+      testJson
+    ) match {
+      case Right( model: TestModelWithPureConfig ) =>
+        assert( model.pure === TestModelPureConfig.Event2 )
       case Left( ex ) => {
         fail( ex )
       }

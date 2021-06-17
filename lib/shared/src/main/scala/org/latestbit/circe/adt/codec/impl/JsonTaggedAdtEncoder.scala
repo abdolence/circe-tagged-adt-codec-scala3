@@ -24,7 +24,9 @@ import scala.deriving.*
 
 sealed trait JsonTaggedAdtEncoder[T] extends Encoder.AsObject[T]
 sealed trait JsonTaggedAdtEncoderWithConfig[T] extends JsonTaggedAdtEncoder[T]
+
 sealed trait JsonPureTaggedAdtEncoder[T] extends Encoder[T]
+sealed trait JsonPureTaggedAdtEncoderWithConfig[T] extends JsonPureTaggedAdtEncoder[T]
 
 object JsonTaggedAdtEncoder {
 
@@ -41,8 +43,7 @@ object JsonTaggedAdtEncoder {
   inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using adtConfig: JsonTaggedAdt.Config[T]): Vector[JsonAdtFieldDef[_]] = {
     inline erasedValue[(Fields, Types)] match {
       case (_: (field *: fields), _: (tpe *: types)) => {
-        val tagClassName = TagMacro.tagClassName[tpe]()
-
+        val tagClassName = JsonTaggedAdt.TagClass.create[tpe](using summonInline[Mirror.Of[tpe]]).tagClassName
         val tagValue: String = adtConfig.mappings
           .find(_._2.tagClassName == tagClassName)
           .map(_._1)
@@ -105,8 +106,7 @@ object JsonTaggedAdtEncoderWithConfig {
 
 object JsonPureTaggedAdtEncoder {
 
-  implicit inline given derived[T](using m: Mirror.Of[T]): JsonPureTaggedAdtEncoder[T] = {
-    given adtConfig: JsonTaggedAdt.Config[T] = JsonTaggedAdt.Config.empty[T]
+  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T] = JsonTaggedAdt.Config.empty[T]): JsonPureTaggedAdtEncoder[T] = {
     lazy val allDefs: Vector[JsonTaggedAdtEncoder.JsonAdtFieldDef[_]] = JsonTaggedAdtEncoder.summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
 
     inline m match {
@@ -122,6 +122,19 @@ object JsonPureTaggedAdtEncoder {
         override def apply(obj: T): Json = {
           scala.compiletime.error("This codec implementation for Scala 3 doesn't support deriving anything except enums")
         }
+      }
+    }
+  }
+
+}
+
+object JsonPureTaggedAdtEncoderWithConfig {
+
+  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonPureTaggedAdtEncoderWithConfig[T] = {
+    val parent = JsonPureTaggedAdtEncoder.derived[T]
+    new JsonPureTaggedAdtEncoderWithConfig[T] {
+      override def apply(obj: T): Json = {
+        parent.apply(obj)
       }
     }
   }
