@@ -63,7 +63,7 @@ object JsonTaggedAdt {
                  override val decoderDefinition: DecoderDefinition = DecoderDefinition.Default)
       extends Config[E]
 
-    inline final def default[E] = Lax[E]()
+    final def default[E]: Config[E] = Lax[E]()
   }
 
 
@@ -74,8 +74,9 @@ object JsonTaggedAdt {
 
   object PureConfig {
     class Lax[E](override val mappings: Map[String, TagClass[E]] = Map()) extends PureConfig[E]
+    class Strict[E](override val mappings: Map[String, TagClass[E]] = Map()) extends PureConfig[E]
 
-    inline final def default[E] = Lax[E]()
+    final def default[E]: PureConfig[E] = Lax[E]()
   }
 
 
