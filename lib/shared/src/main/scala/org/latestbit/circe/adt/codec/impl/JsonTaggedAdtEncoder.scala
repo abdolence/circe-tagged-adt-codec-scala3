@@ -40,7 +40,7 @@ object JsonTaggedAdtEncoder {
     case _: Mirror.Of[T] => Encoder.AsObject.derived[T]
   }
 
-  inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using adtConfig: JsonTaggedAdt.Config[T]): Vector[JsonAdtFieldDef[_]] = {
+  inline def summmonAllDefs[T,Fields <: Tuple, Types <: Tuple](using inline adtConfig: JsonTaggedAdt.Config[T]): Vector[JsonAdtFieldDef[_]] = {
     inline erasedValue[(Fields, Types)] match {
       case (_: (field *: fields), _: (tpe *: types)) => {
         val tagClassName = JsonTaggedAdt.tagged[tpe](using summonInline[Mirror.Of[tpe]]).tagClassName
@@ -59,11 +59,13 @@ object JsonTaggedAdtEncoder {
     }
   }
 
-  inline def createJsonTaggedAdtEncoder[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtEncoder[T] = {
+  inline def createJsonTaggedAdtEncoder[T](using m: Mirror.Of[T], inline adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtEncoder[T] = {
     lazy val allDefs: Vector[JsonAdtFieldDef[_]] = summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
+
 
     inline m match {
       case sumOfT: Mirror.SumOf[T] => new JsonTaggedAdtEncoder[T] {
+
         override def encodeObject(obj: T): JsonObject = {
           val caseClassIdx = sumOfT.ordinal(obj)
           val caseClassDef = allDefs(caseClassIdx).asInstanceOf[JsonAdtFieldDef[T]]
@@ -85,7 +87,7 @@ object JsonTaggedAdtEncoder {
   }
 
   implicit inline given derived[T](using m: Mirror.Of[T],
-                                   adtConfig: JsonTaggedAdt.Config[T] =
+                                   inline adtConfig: JsonTaggedAdt.Config[T] =
                                     JsonTaggedAdt.Config.empty[T]): JsonTaggedAdtEncoder[T] =
     createJsonTaggedAdtEncoder[T]
 
@@ -93,7 +95,7 @@ object JsonTaggedAdtEncoder {
 
 object JsonTaggedAdtEncoderWithConfig {
 
-  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtEncoderWithConfig[T] = {
+  implicit inline given derived[T](using m: Mirror.Of[T], inline adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtEncoderWithConfig[T] = {
     val parent = JsonTaggedAdtEncoder.derived[T]
     new JsonTaggedAdtEncoderWithConfig[T] {
       override def encodeObject(obj: T): JsonObject = {
@@ -106,7 +108,7 @@ object JsonTaggedAdtEncoderWithConfig {
 
 object JsonPureTaggedAdtEncoder {
 
-  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T] = JsonTaggedAdt.Config.empty[T]): JsonPureTaggedAdtEncoder[T] = {
+  implicit inline given derived[T](using m: Mirror.Of[T], inline adtConfig: JsonTaggedAdt.Config[T] = JsonTaggedAdt.Config.empty[T]): JsonPureTaggedAdtEncoder[T] = {
     lazy val allDefs: Vector[JsonTaggedAdtEncoder.JsonAdtFieldDef[_]] = JsonTaggedAdtEncoder.summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
 
     inline m match {
@@ -130,7 +132,7 @@ object JsonPureTaggedAdtEncoder {
 
 object JsonPureTaggedAdtEncoderWithConfig {
 
-  implicit inline given derived[T](using m: Mirror.Of[T], adtConfig: JsonTaggedAdt.Config[T]): JsonPureTaggedAdtEncoderWithConfig[T] = {
+  implicit inline given derived[T](using m: Mirror.Of[T], inline adtConfig: JsonTaggedAdt.Config[T]): JsonPureTaggedAdtEncoderWithConfig[T] = {
     val parent = JsonPureTaggedAdtEncoder.derived[T]
     new JsonPureTaggedAdtEncoderWithConfig[T] {
       override def apply(obj: T): Json = {

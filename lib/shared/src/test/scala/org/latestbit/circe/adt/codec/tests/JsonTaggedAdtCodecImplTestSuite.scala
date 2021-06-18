@@ -62,6 +62,20 @@ given JsonTaggedAdt.Config[TestModelPureConfig] = JsonTaggedAdt.Config[TestModel
 
 case class TestModelWithPureConfig(pure: TestModelPureConfig) derives Encoder.AsObject, Decoder
 
+
+enum TestModelWithStrictConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.DecoderWithConfig {
+  case Event1
+  case Event2( f1: String )
+  case Event3( f1: String )
+}
+
+given JsonTaggedAdt.Config[TestModelWithStrictConfig] = JsonTaggedAdt.Config[TestModelWithStrictConfig] (
+  mappings = Map(
+    "ev1" -> JsonTaggedAdt.tagged[TestModelWithStrictConfig.Event1.type],
+    "ev2" -> JsonTaggedAdt.tagged[TestModelWithStrictConfig.Event2]
+  )
+)
+
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
 
   "JsonTaggedAdtCodec" should "be able to serialise ADTs correctly with default config" in {
