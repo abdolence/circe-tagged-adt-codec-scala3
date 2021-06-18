@@ -34,7 +34,7 @@ enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.
   case Event2( f1: String )
 }
 
-given JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config[TestModelWithConfig] (
+given JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config.Lax[TestModelWithConfig] (
   mappings = Map(
     "ev1" -> JsonTaggedAdt.tagged[TestModelWithConfig.Event1.type],
     "ev2" -> JsonTaggedAdt.tagged[TestModelWithConfig.Event2]
@@ -53,7 +53,7 @@ enum TestModelPureConfig derives JsonTaggedAdt.PureEncoderWithConfig, JsonTagged
   case Event2
 }
 
-given JsonTaggedAdt.Config[TestModelPureConfig] = JsonTaggedAdt.Config[TestModelPureConfig] (
+given JsonTaggedAdt.PureConfig[TestModelPureConfig] = JsonTaggedAdt.PureConfig.Lax[TestModelPureConfig] (
   mappings = Map(
     "ev1" -> JsonTaggedAdt.tagged[TestModelPureConfig.Event1.type],
     "ev2" -> JsonTaggedAdt.tagged[TestModelPureConfig.Event2.type]
@@ -69,7 +69,7 @@ enum TestModelWithStrictConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTagg
   case Event3( f1: String )
 }
 
-given JsonTaggedAdt.Config[TestModelWithStrictConfig] = JsonTaggedAdt.Config[TestModelWithStrictConfig] (
+given JsonTaggedAdt.Config[TestModelWithStrictConfig] = JsonTaggedAdt.Config.Lax[TestModelWithStrictConfig] (
   mappings = Map(
     "ev1" -> JsonTaggedAdt.tagged[TestModelWithStrictConfig.Event1.type],
     "ev2" -> JsonTaggedAdt.tagged[TestModelWithStrictConfig.Event2]

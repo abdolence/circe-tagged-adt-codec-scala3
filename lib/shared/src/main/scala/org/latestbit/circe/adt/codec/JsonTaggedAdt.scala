@@ -39,17 +39,45 @@ object JsonTaggedAdt {
   final val DefaultTypeFieldName: String = "type"
 
   /**
-   * Configuration for tagged deriving encoder/decoders.
+   * Base configuration trait
    */
-  class Config[E]( val typeFieldName: String = DefaultTypeFieldName,
-                   val mappings: Map[String, TagClass[E]] = Map(),
-                   val encoderDefinition: EncoderDefinition = EncoderDefinition.Default,
-                   val decoderDefinition: DecoderDefinition = DecoderDefinition.Default
-                 )
+  sealed trait BaseConfig[E] {
+    val mappings: Map[String, TagClass[E]]
+  }
+
+  /**
+   * Configuration for ADT encoding as object with types
+   */
+  sealed trait Config[E] extends BaseConfig[E] {
+    val typeFieldName: String
+
+    val encoderDefinition: EncoderDefinition
+    val decoderDefinition: DecoderDefinition
+  }
+
 
   object Config {
-    inline final def empty[E] = Config[E]()
+    class Lax[E](override val typeFieldName: String = DefaultTypeFieldName,
+                 override val mappings: Map[String, TagClass[E]] = Map(),
+                 override val encoderDefinition: EncoderDefinition = EncoderDefinition.Default,
+                 override val decoderDefinition: DecoderDefinition = DecoderDefinition.Default)
+      extends Config[E]
+
+    inline final def default[E] = Lax[E]()
   }
+
+
+  /**
+   * Configuration for enum to string "pure" codecs
+   */
+  sealed trait PureConfig[E] extends BaseConfig[E]
+
+  object PureConfig {
+    class Lax[E](override val mappings: Map[String, TagClass[E]] = Map()) extends PureConfig[E]
+
+    inline final def default[E] = Lax[E]()
+  }
+
 
   class TagClass[+E](val tagClassName: String)
 
