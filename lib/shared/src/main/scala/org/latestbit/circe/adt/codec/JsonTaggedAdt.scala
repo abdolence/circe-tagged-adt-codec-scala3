@@ -45,21 +45,23 @@ object JsonTaggedAdt {
     val mappings: Map[String, TagClass[E]]
     val strict: Boolean
 
-    inline def getAllFields[T,Fields <: Tuple](): Vector[String] = {
+    inline def getAllFields[T, Fields <: Tuple](): Vector[String] = {
       inline erasedValue[Fields] match {
-        case (_: (field *: fields)) => {
+        case ( _: ( field *: fields ) ) => {
           constValue[field].toString() +: getAllFields[T, fields]()
         }
         case _ => Vector.empty
       }
     }
 
-    inline def checkStrictRequirements[T]()(using m: Mirror.Of[T]) = {
+    inline def checkStrictRequirements[T]()( using m: Mirror.Of[T] ) = {
       val allFields: Vector[String] = getAllFields[T, m.MirroredElemLabels]()
 
-      if(strict && mappings.size != allFields.size) {
-        sys.error(s"JSON ADT mapping configuration for: ${constValue[m.MirroredLabel].toString()} doesn't have all possible values. " +
-          s"Possible fields: ${allFields.mkString(", ")}. Configured mappings for: ${mappings.values.map(_.tagClassName).mkString(", ")}"
+      if (strict && mappings.size != allFields.size) {
+        sys.error(
+          s"JSON ADT mapping configuration for: ${constValue[m.MirroredLabel].toString()} doesn't have all possible values. " +
+            s"Possible fields: ${allFields
+              .mkString( ", " )}. Configured mappings for: ${mappings.values.map( _.tagClassName ).mkString( ", " )}"
         )
       }
     }
@@ -76,16 +78,16 @@ object JsonTaggedAdt {
   }
 
   object Config {
-    class Values[E](override val typeFieldName: String = DefaultTypeFieldName,
-                 override val mappings: Map[String, TagClass[E]] = Map(),
-                 override val encoderDefinition: EncoderDefinition = EncoderDefinition.Default,
-                 override val decoderDefinition: DecoderDefinition = DecoderDefinition.Default,
-                 override val strict: Boolean = false)
-      extends Config[E]
+    class Values[E](
+        override val typeFieldName: String = DefaultTypeFieldName,
+        override val mappings: Map[String, TagClass[E]] = Map(),
+        override val encoderDefinition: EncoderDefinition = EncoderDefinition.Default,
+        override val decoderDefinition: DecoderDefinition = DecoderDefinition.Default,
+        override val strict: Boolean = false
+    ) extends Config[E]
 
     final def default[E]: Config[E] = Values[E]()
   }
-
 
   /**
    * Configuration for enum to string "pure" codecs
@@ -93,42 +95,48 @@ object JsonTaggedAdt {
   sealed trait PureConfig[E] extends BaseConfig[E]
 
   object PureConfig {
-    class Values[E](override val mappings: Map[String, TagClass[E]] = Map(),
-                    override val strict: Boolean = false) extends PureConfig[E]
+    class Values[E](
+        override val mappings: Map[String, TagClass[E]] = Map(),
+        override val strict: Boolean = false
+    ) extends PureConfig[E]
 
     final def default[E]: PureConfig[E] = Values[E]()
   }
 
+  class TagClass[+E]( val tagClassName: String )
 
-  class TagClass[+E](val tagClassName: String)
-
-  inline def tagged[C](using m: Mirror.Of[C]): TagClass[C] = {
-    TagClass(constValue[m.MirroredLabel].toString())
+  inline def tagged[C]( using m: Mirror.Of[C] ): TagClass[C] = {
+    TagClass( constValue[m.MirroredLabel].toString() )
   }
 
   /**
    * Defines encoding implementation using encoded json object, a tag value, and field name
    */
   trait EncoderDefinition {
-    def encodeTaggedJsonObject(typeFieldName: String,
-                               tagValue: String,
-                               tagJsonObject: JsonObject): JsonObject
+    def encodeTaggedJsonObject(
+        typeFieldName: String,
+        tagValue: String,
+        tagJsonObject: JsonObject
+    ): JsonObject
   }
 
   object EncoderDefinition {
+
     /**
      * Default implementation of encoding JSON with a type field for:
      * ```
      * {
-     *  'type': 'tagValue',
-     *   ...
+     * 'type': 'tagValue',
+     * ...
      * }
      * ```
      */
     object Default extends EncoderDefinition {
-      override def encodeTaggedJsonObject(typeFieldName: String,
-                                 tagValue: String,
-                                 tagJsonObject: JsonObject): JsonObject = {
+      override def encodeTaggedJsonObject(
+          typeFieldName: String,
+          tagValue: String,
+          tagJsonObject: JsonObject
+      ): JsonObject = {
         tagJsonObject.add(
           typeFieldName,
           Json.fromString( tagValue )
@@ -141,25 +149,30 @@ object JsonTaggedAdt {
    * Defines decoding implementation using encoded json object, a tag value, and field name
    */
   trait DecoderDefinition {
-    def decodeTaggedJsonObject(cursor: HCursor,
-                               typeFieldName: String): io.circe.Decoder.Result[(String, HCursor)]
+    def decodeTaggedJsonObject(
+        cursor: HCursor,
+        typeFieldName: String
+    ): io.circe.Decoder.Result[( String, HCursor )]
   }
 
   object DecoderDefinition {
+
     /**
      * Default implementation of encoding JSON with a type field for:
      * ```
      * {
-     *  'type': 'tagValue',
-     *   ...
+     * 'type': 'tagValue',
+     * ...
      * }
      * ```
      */
     object Default extends DecoderDefinition {
-      def decodeTaggedJsonObject(cursor: HCursor,
-                                 typeFieldName: String): io.circe.Decoder.Result[(String, HCursor)] = {
-        cursor.get[String](typeFieldName).map { tagValue =>
-          (tagValue, cursor)
+      def decodeTaggedJsonObject(
+          cursor: HCursor,
+          typeFieldName: String
+      ): io.circe.Decoder.Result[( String, HCursor )] = {
+        cursor.get[String]( typeFieldName ).map { tagValue =>
+          ( tagValue, cursor )
         }
       }
     }
