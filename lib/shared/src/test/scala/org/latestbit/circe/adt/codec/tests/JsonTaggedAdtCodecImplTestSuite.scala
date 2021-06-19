@@ -33,7 +33,7 @@ enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.
   case Event2( f1: String )
 }
 
-given JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config.Values[TestModelWithConfig] (
+given JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config.Values[TestModelWithConfig](
   mappings = Map(
     "ev1" -> JsonTaggedAdt.tagged[TestModelWithConfig.Event1.type],
     "ev2" -> JsonTaggedAdt.tagged[TestModelWithConfig.Event2]
@@ -45,36 +45,41 @@ enum TestModelPure derives JsonTaggedAdt.PureEncoder, JsonTaggedAdt.PureDecoder 
   case Event2
 }
 
-case class TestModelWithPure(pure: TestModelPure) derives Encoder.AsObject, Decoder
+case class TestModelWithPure( pure: TestModelPure ) derives Encoder.AsObject, Decoder
 
-enum TestModelPureConfig derives JsonTaggedAdt.PureEncoderWithConfig, JsonTaggedAdt.PureDecoderWithConfig {
+enum TestModelPureConfig
+    derives JsonTaggedAdt.PureEncoderWithConfig,
+      JsonTaggedAdt.PureDecoderWithConfig {
   case Event1
   case Event2
 }
 
-given JsonTaggedAdt.PureConfig[TestModelPureConfig] = JsonTaggedAdt.PureConfig.Values[TestModelPureConfig] (
-  mappings = Map(
-    "ev1" -> JsonTaggedAdt.tagged[TestModelPureConfig.Event1.type],
-    "ev2" -> JsonTaggedAdt.tagged[TestModelPureConfig.Event2.type]
+given JsonTaggedAdt.PureConfig[TestModelPureConfig] =
+  JsonTaggedAdt.PureConfig.Values[TestModelPureConfig](
+    mappings = Map(
+      "ev1" -> JsonTaggedAdt.tagged[TestModelPureConfig.Event1.type],
+      "ev2" -> JsonTaggedAdt.tagged[TestModelPureConfig.Event2.type]
+    )
   )
-)
 
-case class TestModelWithPureConfig(pure: TestModelPureConfig) derives Encoder.AsObject, Decoder
+case class TestModelWithPureConfig( pure: TestModelPureConfig ) derives Encoder.AsObject, Decoder
 
-
-enum TestModelWithStrictConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.DecoderWithConfig {
+enum TestModelWithStrictConfig
+    derives JsonTaggedAdt.EncoderWithConfig,
+      JsonTaggedAdt.DecoderWithConfig {
   case Event1
   case Event2( f1: String )
   case Event3( f1: String )
 }
 
-given JsonTaggedAdt.Config[TestModelWithStrictConfig] = JsonTaggedAdt.Config.Values[TestModelWithStrictConfig] (
-  strict = true,
-  mappings = Map(
-    "ev1" -> JsonTaggedAdt.tagged[TestModelWithStrictConfig.Event1.type],
-    "ev2" -> JsonTaggedAdt.tagged[TestModelWithStrictConfig.Event2]
+given JsonTaggedAdt.Config[TestModelWithStrictConfig] =
+  JsonTaggedAdt.Config.Values[TestModelWithStrictConfig](
+    strict = true,
+    mappings = Map(
+      "ev1" -> JsonTaggedAdt.tagged[TestModelWithStrictConfig.Event1.type],
+      "ev2" -> JsonTaggedAdt.tagged[TestModelWithStrictConfig.Event2]
+    )
   )
-)
 
 class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec with Matchers {
 
@@ -82,7 +87,7 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec with Matchers {
     val testModel1: TestModelWithDefaults = TestModelWithDefaults.Event1
     val json1: String = testModel1.asJson.dropNullValues.noSpaces
 
-    val testModel2: TestModelWithDefaults = TestModelWithDefaults.Event2("test-val")
+    val testModel2: TestModelWithDefaults = TestModelWithDefaults.Event2( "test-val" )
     val json2: String = testModel2.asJson.dropNullValues.noSpaces
 
     assert( json1.contains( """"type":"Event1"""" ) )
@@ -123,18 +128,18 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec with Matchers {
 
   it should "be able fail if config doesn't contain all required mappings in the strict mode" in {
     val testModel: TestModelWithStrictConfig = TestModelWithStrictConfig.Event1
-    a[RuntimeException] should be thrownBy(testModel.asJson.dropNullValues.noSpaces)
+    a[RuntimeException] should be thrownBy ( testModel.asJson.dropNullValues.noSpaces )
   }
 
   "JsonPureTaggedCodec" should "be able to serialise to Json correctly" in {
-    val testModelWithPure = TestModelWithPure(pure = TestModelPure.Event1)
+    val testModelWithPure = TestModelWithPure( pure = TestModelPure.Event1 )
     val json1: String = testModelWithPure.asJson.dropNullValues.noSpaces
 
-    val testModelWithPure2 = TestModelWithPure(pure = TestModelPure.Event2)
+    val testModelWithPure2 = TestModelWithPure( pure = TestModelPure.Event2 )
     val json2: String = testModelWithPure2.asJson.dropNullValues.noSpaces
 
-    assert( json1 contains """"pure":"Event1"""")
-    assert( json2 contains """"pure":"Event2"""")
+    assert( json1 contains """"pure":"Event1"""" )
+    assert( json2 contains """"pure":"Event2"""" )
   }
 
   it should "be able to deserialise from Json correctly" in {
@@ -152,14 +157,14 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec with Matchers {
   }
 
   it should "be able to serialise to Json correctly with specified config" in {
-    val testModelWithPure = TestModelWithPureConfig(pure = TestModelPureConfig.Event1)
+    val testModelWithPure = TestModelWithPureConfig( pure = TestModelPureConfig.Event1 )
     val json1: String = testModelWithPure.asJson.dropNullValues.noSpaces
 
-    val testModelWithPure2 = TestModelWithPureConfig(pure = TestModelPureConfig.Event2)
+    val testModelWithPure2 = TestModelWithPureConfig( pure = TestModelPureConfig.Event2 )
     val json2: String = testModelWithPure2.asJson.dropNullValues.noSpaces
 
-    assert( json1 contains """"pure":"ev1"""")
-    assert( json2 contains """"pure":"ev2"""")
+    assert( json1 contains """"pure":"ev1"""" )
+    assert( json2 contains """"pure":"ev2"""" )
   }
 
   it should "be able to deserialise from Json correctly with specified config" in {
@@ -175,6 +180,5 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec with Matchers {
       }
     }
   }
-
 
 }
