@@ -65,6 +65,8 @@ object JsonTaggedAdtDecoder {
     inline m match {
       case sumOfT: Mirror.SumOf[T] => new JsonTaggedAdtDecoder[T] {
 
+        adtConfig.checkStrictRequirements[T]()
+        
         override def apply(cursor: HCursor): Decoder.Result[T] = {
           adtConfig.decoderDefinition.decodeTaggedJsonObject(
             cursor,
@@ -117,6 +119,8 @@ object JsonPureTaggedAdtDecoder {
 
     inline m match {
       case sumOfT: Mirror.SumOf[T] => new JsonPureTaggedAdtDecoder[T] {
+
+        adtConfig.checkStrictRequirements[T]()
 
         override def apply(cursor: HCursor): Decoder.Result[T] = {
           cursor.as[String](using stringDecoder).flatMap { tagValue =>

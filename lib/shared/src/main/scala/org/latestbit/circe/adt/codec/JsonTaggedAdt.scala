@@ -45,9 +45,22 @@ object JsonTaggedAdt {
     val mappings: Map[String, TagClass[E]]
     val strict: Boolean
 
-    inline def checkStrictRequirements[T](fieldsDefsSize: Int)(using m: Mirror.Of[T]) = {
-      if(strict && mappings.size != fieldsDefsSize) {
-        sys.error(s"JSON ADT mapping configuration for: ${constValue[m.MirroredLabel].toString()} doesn't have all possible values")
+    inline def getAllFields[T,Fields <: Tuple](): Vector[String] = {
+      inline erasedValue[Fields] match {
+        case (_: (field *: fields)) => {
+          constValue[field].toString() +: getAllFields[T, fields]()
+        }
+        case _ => Vector.empty
+      }
+    }
+
+    inline def checkStrictRequirements[T]()(using m: Mirror.Of[T]) = {
+      val allFields: Vector[String] = getAllFields[T, m.MirroredElemLabels]()
+
+      if(strict && mappings.size != allFields.size) {
+        sys.error(s"JSON ADT mapping configuration for: ${constValue[m.MirroredLabel].toString()} doesn't have all possible values. " +
+          s"Possible fields: ${allFields.mkString(", ")}. Configured mappings for: ${mappings.values.map(_.tagClassName).mkString(", ")}"
+        )
       }
     }
   }
