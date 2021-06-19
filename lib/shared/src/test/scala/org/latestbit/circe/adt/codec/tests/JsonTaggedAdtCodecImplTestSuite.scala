@@ -21,6 +21,7 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import org.latestbit.circe.adt.codec.*
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import io.circe.generic.semiauto._
 
@@ -34,7 +35,7 @@ enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.
   case Event2( f1: String )
 }
 
-given JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config.Lax[TestModelWithConfig] (
+given JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config.Values[TestModelWithConfig] (
   mappings = Map(
     "ev1" -> JsonTaggedAdt.tagged[TestModelWithConfig.Event1.type],
     "ev2" -> JsonTaggedAdt.tagged[TestModelWithConfig.Event2]
@@ -53,7 +54,7 @@ enum TestModelPureConfig derives JsonTaggedAdt.PureEncoderWithConfig, JsonTagged
   case Event2
 }
 
-given JsonTaggedAdt.PureConfig[TestModelPureConfig] = JsonTaggedAdt.PureConfig.Lax[TestModelPureConfig] (
+given JsonTaggedAdt.PureConfig[TestModelPureConfig] = JsonTaggedAdt.PureConfig.Values[TestModelPureConfig] (
   mappings = Map(
     "ev1" -> JsonTaggedAdt.tagged[TestModelPureConfig.Event1.type],
     "ev2" -> JsonTaggedAdt.tagged[TestModelPureConfig.Event2.type]
@@ -69,14 +70,15 @@ enum TestModelWithStrictConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTagg
   case Event3( f1: String )
 }
 
-given JsonTaggedAdt.Config[TestModelWithStrictConfig] = JsonTaggedAdt.Config.Lax[TestModelWithStrictConfig] (
+given JsonTaggedAdt.Config[TestModelWithStrictConfig] = JsonTaggedAdt.Config.Values[TestModelWithStrictConfig] (
+  strict = true,
   mappings = Map(
     "ev1" -> JsonTaggedAdt.tagged[TestModelWithStrictConfig.Event1.type],
     "ev2" -> JsonTaggedAdt.tagged[TestModelWithStrictConfig.Event2]
   )
 )
 
-class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
+class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec with Matchers {
 
   "JsonTaggedAdtCodec" should "be able to serialise ADTs correctly with default config" in {
     val testModel1: TestModelWithDefaults = TestModelWithDefaults.Event1
@@ -119,6 +121,11 @@ class JsonTaggedAdtCodecImplTestSuite extends AnyFlatSpec {
         assert( model === TestModelWithConfig.Event1 )
       case Left( ex ) => fail( ex )
     }
+  }
+
+  it should "be able fail if config doesn't contain all required mappings in the strict mode" in {
+    val testModel: TestModelWithStrictConfig = TestModelWithStrictConfig.Event1
+    a[RuntimeException] should be thrownBy(testModel.asJson.dropNullValues.noSpaces)
   }
 
   "JsonPureTaggedCodec" should "be able to serialise to Json correctly" in {

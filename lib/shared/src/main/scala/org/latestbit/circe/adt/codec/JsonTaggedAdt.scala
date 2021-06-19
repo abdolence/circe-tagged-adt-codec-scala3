@@ -43,6 +43,13 @@ object JsonTaggedAdt {
    */
   sealed trait BaseConfig[E] {
     val mappings: Map[String, TagClass[E]]
+    val strict: Boolean
+
+    inline def checkStrictRequirements[T](fieldsDefsSize: Int)(using m: Mirror.Of[T]) = {
+      if(strict && mappings.size != fieldsDefsSize) {
+        sys.error(s"JSON ADT mapping configuration for: ${constValue[m.MirroredLabel].toString()} doesn't have all possible values")
+      }
+    }
   }
 
   /**
@@ -55,15 +62,15 @@ object JsonTaggedAdt {
     val decoderDefinition: DecoderDefinition
   }
 
-
   object Config {
-    class Lax[E](override val typeFieldName: String = DefaultTypeFieldName,
+    class Values[E](override val typeFieldName: String = DefaultTypeFieldName,
                  override val mappings: Map[String, TagClass[E]] = Map(),
                  override val encoderDefinition: EncoderDefinition = EncoderDefinition.Default,
-                 override val decoderDefinition: DecoderDefinition = DecoderDefinition.Default)
+                 override val decoderDefinition: DecoderDefinition = DecoderDefinition.Default,
+                 override val strict: Boolean = false)
       extends Config[E]
 
-    final def default[E]: Config[E] = Lax[E]()
+    final def default[E]: Config[E] = Values[E]()
   }
 
 
@@ -73,10 +80,10 @@ object JsonTaggedAdt {
   sealed trait PureConfig[E] extends BaseConfig[E]
 
   object PureConfig {
-    class Lax[E](override val mappings: Map[String, TagClass[E]] = Map()) extends PureConfig[E]
-    class Strict[E](override val mappings: Map[String, TagClass[E]] = Map()) extends PureConfig[E]
+    class Values[E](override val mappings: Map[String, TagClass[E]] = Map(),
+                    override val strict: Boolean = false) extends PureConfig[E]
 
-    final def default[E]: PureConfig[E] = Lax[E]()
+    final def default[E]: PureConfig[E] = Values[E]()
   }
 
 

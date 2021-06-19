@@ -62,9 +62,10 @@ object JsonTaggedAdtEncoder {
   inline def createJsonTaggedAdtEncoder[T](using m: Mirror.Of[T], inline adtConfig: JsonTaggedAdt.Config[T]): JsonTaggedAdtEncoder[T] = {
     lazy val allDefs: Vector[JsonAdtFieldDef[_]] = summmonAllDefs[T, m.MirroredElemLabels, m.MirroredElemTypes]
 
-
     inline m match {
       case sumOfT: Mirror.SumOf[T] => new JsonTaggedAdtEncoder[T] {
+
+        adtConfig.checkStrictRequirements[T](allDefs.size)
 
         override def encodeObject(obj: T): JsonObject = {
           val caseClassIdx = sumOfT.ordinal(obj)
@@ -132,6 +133,7 @@ object JsonPureTaggedAdtEncoder {
 
     inline m match {
       case sumOfT: Mirror.SumOf[T] => new JsonPureTaggedAdtEncoder[T] {
+
         override def apply(obj: T): Json = {
           val caseClassIdx = sumOfT.ordinal(obj)
           val caseClassDef = allDefs(caseClassIdx)
