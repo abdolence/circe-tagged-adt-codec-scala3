@@ -151,7 +151,8 @@ lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
   )
   .jsSettings(
     libraryDependencies ++= baseJsDependencies.value ++ Seq(),
-    scalacOptions ++= scalacJsOptions
+    scalacOptions ++= scalacJsOptions,
+    test := false
   )
 
 lazy val circeTaggedAdtCodecLibJVM = circeTaggedAdtCodecLibCross.jvm
