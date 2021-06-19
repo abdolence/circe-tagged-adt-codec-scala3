@@ -23,8 +23,6 @@ import org.latestbit.circe.adt.codec.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-import io.circe.generic.semiauto._
-
 enum TestModelWithDefaults derives JsonTaggedAdt.Encoder, JsonTaggedAdt.Decoder {
   case Event1
   case Event2( f1: String )
