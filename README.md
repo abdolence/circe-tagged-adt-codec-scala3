@@ -96,16 +96,19 @@ enum TestEvent derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.DecoderWit
 
 // Configuration
 given JsonTaggedAdt.Config[TestEvent] = JsonTaggedAdt.Config.Values[TestEvent] (
-  // Check if provided mappings aren't sufficient for all case classes (and throw exception if it is not)
-  strict = true, 
+  // Mappings between type/tag values and case classes/objects  
   mappings = Map(
     "ev1" -> JsonTaggedAdt.tagged[TestEvent.Event1],
     "ev2" -> JsonTaggedAdt.tagged[TestEvent.Event2],
     "ev3" -> JsonTaggedAdt.tagged[TestEvent.Event3.type]
-  )
+  ),
+  // Check if provided mappings aren't sufficient for all case classes (and throw exception if it is not)
+  strict = true, // Default is false
+  typeFieldName = "my-type" // Default is 'type'
 )
 
-val testEvent : TestEvent = TestEvent.TestEvent1("test")
+// Encoding
+val testEvent : TestEvent = TestEvent.Event1("test")
 val testJsonString : String = testEvent.asJson.dropNullValues.noSpaces
 
 // Decoding
