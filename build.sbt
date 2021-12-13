@@ -6,7 +6,7 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 name := "circe-tagged-adt-codec-root"
 
-ThisBuild / version := "0.10.0"
+ThisBuild / version := "0.10.1"
 
 ThisBuild / versionScheme := Some("semver-spec")
 
@@ -21,7 +21,7 @@ ThisBuild / licenses := Seq(
   )
 )
 
-ThisBuild / crossScalaVersions := Seq( "3.0.0" )
+ThisBuild / crossScalaVersions := Seq( "3.0.1" )
 
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.head
 
@@ -61,9 +61,7 @@ def baseScalacOptions(scalaVersionStr: String) = Seq(
   "-feature",
   "-language:higherKinds",
 ) ++ (CrossVersion.partialVersion( scalaVersionStr ) match {
-  case Some( ( 2, n ) ) if n >= 13 => Seq( "-Xsource:3" )
-  case Some( ( 2, n ) ) if n < 13  => Seq( "-Ypartial-unification" )
-  case _                           => Seq()
+  case _                           =>         Seq()
 })
 
 ThisBuild / javacOptions ++= Seq(
@@ -89,7 +87,7 @@ ThisBuild / packageOptions := Seq(
   )
 )
 
-val circeVersion = "0.14.0"
+val circeVersion = "0.14.1"
 val scalaTestVersion = "3.2.9"
 
 val baseJvmDependencies =
@@ -123,7 +121,7 @@ lazy val circeTaggedAdtCodecRoot =
       publish := {},
       publishLocal := {},
       crossScalaVersions := List(),
-      scalacOptions := baseScalacOptions(scalaVersion.value)
+      scalacOptions ++= baseScalacOptions(scalaVersion.value)
     )
 
 lazy val circeTaggedAdtCodecLib =
@@ -135,7 +133,7 @@ lazy val circeTaggedAdtCodecLib =
       publish := {},
       publishLocal := {},
       crossScalaVersions := List(),
-      scalacOptions := baseScalacOptions(scalaVersion.value)
+      scalacOptions ++= baseScalacOptions(scalaVersion.value)
     )
 
 lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
@@ -144,7 +142,7 @@ lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
   .in( file( "lib" ) )
   .settings(
     name := "circe-tagged-adt-codec",
-    scalacOptions := baseScalacOptions(scalaVersion.value)
+    scalacOptions ++= baseScalacOptions(scalaVersion.value)
   )
   .jvmSettings(
     libraryDependencies ++= baseJvmDependencies ++ Seq()
