@@ -23,12 +23,12 @@ import org.latestbit.circe.adt.codec.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-enum TestModelWithDefaults derives JsonTaggedAdt.Encoder, JsonTaggedAdt.Decoder {
+enum TestModelWithDefaults derives JsonTaggedAdt.Codec {
   case Event1
   case Event2( f1: String )
 }
 
-enum TestModelWithConfig derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.DecoderWithConfig {
+enum TestModelWithConfig derives JsonTaggedAdt.CodecWithConfig {
   case Event1
   case Event2( f1: String )
 }
@@ -40,16 +40,14 @@ given JsonTaggedAdt.Config[TestModelWithConfig] = JsonTaggedAdt.Config.Values[Te
   )
 )
 
-enum TestModelPure derives JsonTaggedAdt.PureEncoder, JsonTaggedAdt.PureDecoder {
+enum TestModelPure derives JsonTaggedAdt.PureCodec {
   case Event1
   case Event2
 }
 
 case class TestModelWithPure( pure: TestModelPure ) derives Encoder.AsObject, Decoder
 
-enum TestModelPureConfig
-    derives JsonTaggedAdt.PureEncoderWithConfig,
-      JsonTaggedAdt.PureDecoderWithConfig {
+enum TestModelPureConfig derives JsonTaggedAdt.PureCodecWithConfig {
   case Event1
   case Event2
 }
