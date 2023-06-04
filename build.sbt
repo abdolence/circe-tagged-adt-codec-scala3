@@ -21,7 +21,7 @@ ThisBuild / licenses := Seq(
   )
 )
 
-ThisBuild / crossScalaVersions := Seq( "3.0.1" )
+ThisBuild / crossScalaVersions := Seq( "3.3.0" )
 
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.head
 
@@ -74,6 +74,7 @@ ThisBuild / javacOptions ++= Seq(
 )
 
 val scalacJsOptions = Seq()
+val scalacNativeOptions = Seq()
 
 ThisBuild / packageOptions := Seq(
   ManifestAttributes(
@@ -87,8 +88,8 @@ ThisBuild / packageOptions := Seq(
   )
 )
 
-val circeVersion = "0.14.1"
-val scalaTestVersion = "3.2.9"
+val circeVersion = "0.14.5"
+val scalaTestVersion = "3.2.16"
 
 val baseJvmDependencies =
   Seq(
@@ -114,6 +115,19 @@ val baseJsDependencies =
       ).map( _ % scalaTestVersion % Test )
   )
 
+val baseNativeDependencies =
+  Def.setting(
+    Seq(
+      "io.circe" %%% "circe-core",
+      "io.circe" %%% "circe-generic",
+      "io.circe" %%% "circe-parser"
+    ).map( _ % circeVersion ) ++
+      Seq(
+        "org.scalactic" %%% "scalactic",
+        "org.scalatest" %%% "scalatest"
+      ).map( _ % scalaTestVersion % Test )
+  )
+
 lazy val circeTaggedAdtCodecRoot =
   (project in file( "." ))
     .aggregate( circeTaggedAdtCodecLib )
@@ -127,7 +141,7 @@ lazy val circeTaggedAdtCodecRoot =
 lazy val circeTaggedAdtCodecLib =
   project
     .in( file( "lib" ) )
-    .aggregate( circeTaggedAdtCodecLibJVM, circeTaggedAdtCodecLibJS )
+    .aggregate( circeTaggedAdtCodecLibJVM, circeTaggedAdtCodecLibJS, circeTaggedAdtCodecLibNative )
     .settings(
       name := "circe-tagged-adt-codec",
       publish := {},
@@ -136,7 +150,7 @@ lazy val circeTaggedAdtCodecLib =
       scalacOptions ++= baseScalacOptions(scalaVersion.value)
     )
 
-lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
+lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform, NativePlatform )
   .withoutSuffixFor( JVMPlatform )
   .crossType( CrossType.Full )
   .in( file( "lib" ) )
@@ -151,8 +165,13 @@ lazy val circeTaggedAdtCodecLibCross = crossProject( JSPlatform, JVMPlatform )
     libraryDependencies ++= baseJsDependencies.value ++ Seq(),
     scalacOptions ++= scalacJsOptions,
     test := false
+  ).nativeSettings(
+    libraryDependencies ++= baseJsDependencies.value ++ Seq(),
+    scalacOptions ++= scalacNativeOptions,
+    test := false 
   )
 
 lazy val circeTaggedAdtCodecLibJVM = circeTaggedAdtCodecLibCross.jvm
 lazy val circeTaggedAdtCodecLibJS = circeTaggedAdtCodecLibCross.js
+lazy val circeTaggedAdtCodecLibNative = circeTaggedAdtCodecLibCross.native
 
