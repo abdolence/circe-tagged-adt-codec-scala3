@@ -21,7 +21,7 @@ ThisBuild / licenses := Seq(
   )
 )
 
-ThisBuild / crossScalaVersions := Seq( "3.3.0" )
+ThisBuild / crossScalaVersions := Seq( "3.0.1" )
 
 ThisBuild / scalaVersion := (ThisBuild / crossScalaVersions).value.head
 
