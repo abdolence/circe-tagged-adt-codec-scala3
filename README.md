@@ -35,8 +35,9 @@ The main objectives here are:
 - Avoid writing circe Encoder/Decoder manually.
 
 ## Scala support
-- Scala v3
+- Scala 3.3.0+
 - Scala.js v1.6+
+- Scala Native 0.4.12+
 
 ## Getting Started
 Add the following to your `build.sbt`:
@@ -45,7 +46,7 @@ Add the following to your `build.sbt`:
 libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.10.1"
 ```
 
-or if you need Scala.js support:
+or if you need Scala.js or Native support:
 
 ```scala
 libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.10.1"
@@ -54,12 +55,12 @@ libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.10.1"
 ## Usage
 
 ```scala
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
 
 // One import for this ADT/JSON codec
-import org.latestbit.circe.adt.codec._
+import org.latestbit.circe.adt.codec.*
 
 enum TestEvent derives JsonTaggedAdt.Encoder, JsonTaggedAdt.Decoder {
   case Event1(anyYourField : String /*, ...*/)
@@ -79,12 +80,12 @@ decode[TestEvent] (testJsonString) match {
 ### Tag configurations
 Now we want to provide mapping between tag in JSON and case classes:
 ```scala
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
 
 // One import for this ADT/JSON codec
-import org.latestbit.circe.adt.codec._
+import org.latestbit.circe.adt.codec.*
 
 // You still can use JsonTaggedAdt.Encoder/Decoder here, but `WithConfig` make
 // configs explicitly required and without configuration it fails at compile time.
