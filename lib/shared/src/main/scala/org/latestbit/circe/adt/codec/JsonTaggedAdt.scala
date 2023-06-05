@@ -26,6 +26,11 @@ import io.circe.*
 
 object JsonTaggedAdt {
 
+  type Codec[T] = impl.JsonTaggedAdtCodec[T]
+  type CodecWithConfig[T] = impl.JsonTaggedAdtCodecWithConfig[T]
+  type PureCodec[T] = impl.JsonPureTaggedAdtCodec[T]
+  type PureCodecWithConfig[T] = impl.JsonPureTaggedAdtCodecWithConfig[T]
+
   type Encoder[T] = impl.JsonTaggedAdtEncoder[T]
   type EncoderWithConfig[T] = impl.JsonTaggedAdtEncoderWithConfig[T]
   type PureEncoder[T] = impl.JsonPureTaggedAdtEncoder[T]
