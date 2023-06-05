@@ -43,13 +43,13 @@ The main objectives here are:
 Add the following to your `build.sbt`:
 
 ```scala
-libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.10.1"
+libraryDependencies += "org.latestbit" %% "circe-tagged-adt-codec" % "0.11.0"
 ```
 
 or if you need Scala.js or Native support:
 
 ```scala
-libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.10.1"
+libraryDependencies += "org.latestbit" %%% "circe-tagged-adt-codec" % "0.11.0"
 ```
 
 ## Usage
@@ -62,7 +62,7 @@ import io.circe.syntax.*
 // One import for this ADT/JSON codec
 import org.latestbit.circe.adt.codec.*
 
-enum TestEvent derives JsonTaggedAdt.Encoder, JsonTaggedAdt.Decoder {
+enum TestEvent derives JsonTaggedAdt.Codec {
   case Event1(anyYourField : String /*, ...*/)
   case Event2(anyOtherField : Long /*, ...*/)
   case Event3 // No fields  
@@ -89,7 +89,7 @@ import org.latestbit.circe.adt.codec.*
 
 // You still can use JsonTaggedAdt.Encoder/Decoder here, but `WithConfig` make
 // configs explicitly required and without configuration it fails at compile time.
-enum TestEvent derives JsonTaggedAdt.EncoderWithConfig, JsonTaggedAdt.DecoderWithConfig {
+enum TestEvent derives JsonTaggedAdt.CodecWithConfig {
   case Event1(anyYourField : String /*, ...*/)
   case Event2(anyOtherField : Long /*, ...*/)
   case Event3 // No fields  
@@ -126,7 +126,7 @@ without any additional type tags and objects to produce JSON strings for enum co
 To help with this scenario, ADT codec provides the specialized encoder and decoder implementations:
 
 ```scala
-enum MyEnum derives JsonTaggedAdt.PureEncoder, JsonTaggedAdt.PureDecoder {
+enum MyEnum derives JsonTaggedAdt.PureCodec {
   case Enum1
   case Enum2
 }
@@ -134,7 +134,7 @@ enum MyEnum derives JsonTaggedAdt.PureEncoder, JsonTaggedAdt.PureDecoder {
 
 There are `WithConfig` versions of configs accordingly:
 ```scala
-enum MyEnum derives JsonTaggedAdt.PureEncoderWithConfig, JsonTaggedAdt.PureDecoderWithConfig {
+enum MyEnum derives JsonTaggedAdt.PureCodecWithConfig {
   case Enum1
   case Enum2
 }
