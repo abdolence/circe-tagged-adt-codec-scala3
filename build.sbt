@@ -6,7 +6,7 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 name := "circe-tagged-adt-codec-root"
 
-ThisBuild / version := "0.10.1"
+ThisBuild / version := "0.11.0"
 
 ThisBuild / versionScheme := Some("semver-spec")
 
