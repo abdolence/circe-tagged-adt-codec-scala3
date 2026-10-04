@@ -4,7 +4,7 @@
 This is archived now since Circe core implementation has out of box solution for Scala 3 and you don't need this.
 (Check this example for example: https://stackoverflow.com/questions/42068680/circe-and-scalas-enumeration-type/)
 
-
+## Previously for history
 This library provides an efficient, type safe and Scala 3 inline based 
 ADT to JSON encoder/decoder for Circe, with configurable JSON type field mappings.
 
