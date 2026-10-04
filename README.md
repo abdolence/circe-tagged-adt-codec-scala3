@@ -1,6 +1,9 @@
 ## Circe encoder/decoder Scala 3 implementation for ADT to JSON with a configurable type field.
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.latestbit/circe-tagged-adt-codec_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.latestbit/circe-tagged-adt-codec_2.13/)
-![](https://github.com/abdolence/circe-tagged-adt-codec/workflows/tests%20and%20formatting/badge.svg)
+
+## Archived
+This is archived now since Circe core implementation has out of box solution for Scala 3 and you don't need this.
+(Check this example for example: https://stackoverflow.com/questions/42068680/circe-and-scalas-enumeration-type/)
+
 
 This library provides an efficient, type safe and Scala 3 inline based 
 ADT to JSON encoder/decoder for Circe, with configurable JSON type field mappings.
